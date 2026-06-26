@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual de Deploy — SexShop no Railway</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #7c3aed;
+      --primary-dark: #5b21b6;
+      --primary-light: #ede9fe;
+      --success: #059669;
+      --success-light: #d1fae5;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --info: #0284c7;
+      --info-light: #e0f2fe;
+      --dark: #1e1b4b;
+      --gray-900: #111827;
+      --gray-800: #1f2937;
+      --gray-700: #374151;
+      --gray-600: #4b5563;
+      --gray-500: #6b7280;
+      --gray-400: #9ca3af;
+      --gray-300: #d1d5db;
+      --gray-200: #e5e7eb;
+      --gray-100: #f3f4f6;
+      --gray-50: #f9fafb;
+      --white: #ffffff;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.6;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: fixed;
+      top: 0; left: 0;
+      width: 260px;
+      height: 100vh;
+      background: var(--dark);
+      overflow-y: auto;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-logo h2 {
+      color: var(--white);
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .sidebar-logo span {
+      color: #a78bfa;
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    .sidebar nav { padding: 16px 0; flex: 1; }
+
+    .nav-section {
+      padding: 8px 20px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #6d6d8f;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      color: #c4c4d4;
+      text-decoration: none;
+      font-size: 13.5px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .nav-item:hover, .nav-item.active {
+      background: rgba(124,58,237,0.2);
+      color: #c4b5fd;
+    }
+
+    .nav-item .num {
+      width: 20px;
+      height: 20px;
+      background: var(--primary);
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── MAIN ── */
+    .main {
+      margin-left: 260px;
+      min-height: 100vh;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #7c3aed 100%);
+      padding: 60px 48px;
+      color: white;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 100px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
+
+    .hero h1 {
+      font-size: 40px;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 span { color: #c4b5fd; }
+
+    .hero p {
+      font-size: 17px;
+      color: rgba(255,255,255,0.8);
+      max-width: 560px;
+      margin-bottom: 32px;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stat {
+      text-align: center;
+    }
+
+    .hero-stat strong {
+      display: block;
+      font-size: 28px;
+      font-weight: 800;
+      color: #c4b5fd;
+    }
+
+    .hero-stat span {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* ── CONTENT ── */
+    .content { padding: 40px 48px; max-width: 900px; }
+
+    /* ── SECTION ── */
+    .section { margin-bottom: 56px; scroll-margin-top: 24px; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--gray-200);
+    }
+
+    .section-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .section-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+
+    .section-header p {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-top: 2px;
+    }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ── STEPS ── */
+    .steps { display: flex; flex-direction: column; gap: 16px; }
+
+    .step {
+      display: flex;
+      gap: 16px;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .step:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .step-num {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .step-body { flex: 1; }
+
+    .step-body h3 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 6px;
+    }
+
+    .step-body p {
+      font-size: 14px;
+      color: var(--gray-600);
+      margin-bottom: 10px;
+    }
+
+    /* ── CODE ── */
+    .code-block {
+      background: #0f172a;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+    }
+
+    .code-header span {
+      font-size: 12px;
+      color: #94a3b8;
+      font-family: monospace;
+    }
+
+    .copy-btn {
+      background: #334155;
+      color: #94a3b8;
+      border: none;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover { background: var(--primary); color: white; }
+
+    .code-block pre {
+      padding: 16px;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      color: #e2e8f0;
+      overflow-x: auto;
+      line-height: 1.7;
+    }
+
+    .code-block pre .c { color: #64748b; }
+    .code-block pre .k { color: #c084fc; }
+    .code-block pre .s { color: #86efac; }
+    .code-block pre .v { color: #7dd3fc; }
+
+    code {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+
+    /* ── ALERTS ── */
+    .alert {
+      display: flex;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 10px;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    .alert-icon { font-size: 20px; flex-shrink: 0; }
+    .alert-body strong { display: block; margin-bottom: 4px; }
+
+    .alert-warning { background: var(--warning-light); border: 1px solid #fcd34d; color: #92400e; }
+    .alert-success { background: var(--success-light); border: 1px solid #6ee7b7; color: #065f46; }
+    .alert-info    { background: var(--info-light);    border: 1px solid #7dd3fc; color: #0c4a6e; }
+    .alert-danger  { background: var(--danger-light);  border: 1px solid #fca5a5; color: #7f1d1d; }
+
+    /* ── ENV TABLE ── */
+    .env-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      background: var(--white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .env-table th {
+      background: var(--gray-800);
+      color: var(--white);
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .env-table td {
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--gray-100);
+      vertical-align: top;
+    }
+
+    .env-table tr:last-child td { border-bottom: none; }
+    .env-table tr:hover td { background: var(--gray-50); }
+
+    .env-table .var-name {
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .env-table .var-desc { color: var(--gray-600); }
+
+    .env-table .var-example {
+      font-family: monospace;
+      font-size: 11px;
+      color: var(--gray-500);
+      background: var(--gray-100);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 100px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-required { background: #fee2e2; color: #b91c1c; }
+    .badge-optional { background: #f0fdf4; color: #15803d; }
+
+    /* ── CHECKLIST ── */
+    .checklist { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--white);
+      border: 1px solid var(--gray-200);
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--gray-700);
+    }
+
+    .checklist li::before {
+      content: "☐";
+      font-size: 18px;
+      color: var(--primary);
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    /* ── GRID ── */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ── FLOW ── */
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .flow-item {
+      background: var(--white);
+      border: 2px solid var(--primary-light);
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary-dark);
+      text-align: center;
+    }
+
+    .flow-arrow { color: var(--gray-400); font-size: 20px; }
+
+    /* ── FOOTER ── */
+    .footer {
+      margin-left: 260px;
+      background: var(--dark);
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 24px;
+      font-size: 13px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .sidebar { width: 100%; height: auto; position: relative; }
+      .main, .footer { margin-left: 0; }
+      .hero { padding: 32px 24px; }
+      .hero h1 { font-size: 28px; }
+      .content { padding: 24px; }
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      .sidebar { display: none; }
+      .main, .footer { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h2>🚀 Deploy Manual</h2>
+    <span>SexShop E-Commerce no Railway</span>
+  </div>
+  <nav>
+    <div class="nav-section">Introdução</div>
+    <a class="nav-item active" href="#visao-geral" onclick="scrollTo('visao-geral')">
+      <span class="num">0</span> Visão Geral
+    </a>
+
+    <div class="nav-section">Pré-Requisitos</div>
+    <a class="nav-item" href="#contas">
+      <span class="num">1</span> Criar Contas
+    </a>
+    <a class="nav-item" href="#credenciais">
+      <span class="num">2</span> Obter Credenciais
+    </a>
+
+    <div class="nav-section">GitHub</div>
+    <a class="nav-item" href="#github">
+      <span class="num">3</span> Subir para o GitHub
+    </a>
+
+    <div class="nav-section">Railway</div>
+    <a class="nav-item" href="#railway-projeto">
+      <span class="num">4</span> Criar Projeto
+    </a>
+    <a class="nav-item" href="#railway-banco">
+      <span class="num">5</span> Banco PostgreSQL
+    </a>
+    <a class="nav-item" href="#railway-api">
+      <span class="num">6</span> Configurar API
+    </a>
+    <a class="nav-item" href="#railway-web">
+      <span class="num">7</span> Configurar Frontend
+    </a>
+    <a class="nav-item" href="#variaveis">
+      <span class="num">8</span> Variáveis de Ambiente
+    </a>
+
+    <div class="nav-section">Finalização</div>
+    <a class="nav-item" href="#banco-dados">
+      <span class="num">9</span> Iniciar Banco
+    </a>
+    <a class="nav-item" href="#dominio">
+      <span class="num">10</span> Domínio e HTTPS
+    </a>
+    <a class="nav-item" href="#checklist">
+      <span class="num">✓</span> Checklist Final
+    </a>
+    <a class="nav-item" href="#problemas">
+      <span class="num">!</span> Problemas Comuns
+    </a>
+  </nav>
+</aside>
+
+<!-- ══════════════════════════════════════
+     MAIN
+══════════════════════════════════════ -->
+<div class="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge">📖 Guia Completo de Deploy</div>
+    <h1>Colocando seu<br/><span>SexShop no ar</span></h1>
+    <p>Siga este manual passo a passo para configurar e publicar sua loja completa no Railway com banco de dados, pagamentos e e-mails funcionando.</p>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <strong>~30min</strong>
+        <span>tempo estimado</span>
+      </div>
+      <div class="hero-stat">
+        <strong>10</strong>
+        <span>etapas no total</span>
+      </div>
+      <div class="hero-stat">
+        <strong>100%</strong>
+        <span>gratuito para começar</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ 0. VISÃO GERAL ══ -->
+    <div class="section" id="visao-geral">
+      <div class="section-header">
+        <div class="section-icon" style="background:#ede9fe;">🗺️</div>
+        <div>
+          <h2>Visão Geral da Arquitetura</h2>
+          <p>Entenda como as peças se encaixam antes de começar</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔄 Fluxo de Deploy</div>
+        <div class="flow">
+          <div class="flow-item">💻 Seu PC<br/><small>código</small></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-item">🐙 GitHub<br/><small>repositório</small></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-item">🚂 Railway<br/><small>deploy automático</small></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-item">🌐 Internet<br/><small>loja no ar</small></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">⚙️ Serviço: API (Backend)</div>
+          <p style="font-size:14px;color:var(--gray-600);">Node.js + Express + Prisma rodando na porta 3001. Responsável por toda a lógica de negócio, pagamentos e banco de dados.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">🖥️ Serviço: Web (Frontend)</div>
+          <p style="font-size:14px;color:var(--gray-600);">Next.js 14 rodando na porta 3000. Interface da loja e painel admin que o cliente e administrador veem.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">🐘 Serviço: PostgreSQL</div>
+          <p style="font-size:14px;color:var(--gray-600);">Banco de dados gerenciado pelo próprio Railway. Armazena produtos, pedidos, usuários e todas as configurações.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">☁️ Serviços Externos</div>
+          <p style="font-size:14px;color:var(--gray-600);">Cloudinary (imagens), Stripe (cartão), Mercado Pago (PIX) e SMTP (e-mails). Todos gratuitos para começar.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 1. CRIAR CONTAS ══ -->
+    <div class="section" id="contas">
+      <div class="section-header">
+        <div class="section-icon" style="background:#dbeafe;">👤</div>
+        <div>
+          <h2>Etapa 1 — Criar Contas Necessárias</h2>
+          <p>Você vai precisar de contas em 6 serviços. Todos têm plano gratuito.</p>
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        <div class="alert-icon">💡</div>
+        <div class="alert-body">
+          <strong>Dica:</strong> Use o mesmo e-mail em todos os serviços para facilitar o gerenciamento.
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>GitHub — <a href="https://github.com" target="_blank">github.com</a></h3>
+            <p>Onde o código do projeto ficará armazenado. O Railway vai buscar o código diretamente daqui.</p>
+            <p>Clique em <strong>"Sign up"</strong>, informe e-mail, senha e nome de usuário. Confirme o e-mail.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Railway — <a href="https://railway.app" target="_blank">railway.app</a></h3>
+            <p>Plataforma onde a loja vai rodar. Clique em <strong>"Login"</strong> e escolha <strong>"Login with GitHub"</strong> — isso já conecta as duas contas automaticamente.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Cloudinary — <a href="https://cloudinary.com" target="_blank">cloudinary.com</a></h3>
+            <p>Armazena as imagens dos produtos. Clique em <strong>"Sign Up For Free"</strong>. O plano gratuito tem 25 GB de armazenamento — mais do que suficiente para começar.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Stripe — <a href="https://stripe.com/br" target="_blank">stripe.com/br</a></h3>
+            <p>Processa pagamentos com cartão de crédito. Clique em <strong>"Comece agora"</strong>. Você pode usar em modo de teste sem precisar de CNPJ inicialmente.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Mercado Pago — <a href="https://www.mercadopago.com.br/developers" target="_blank">mercadopago.com.br/developers</a></h3>
+            <p>Processa pagamentos via PIX. Acesse o portal de desenvolvedores, faça login com sua conta Mercado Pago (ou crie uma) e acesse o painel de integrações.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">6</div>
+          <div class="step-body">
+            <h3>Gmail (SMTP) — conta Google existente</h3>
+            <p>Para envio de e-mails transacionais. Você vai usar sua conta Gmail com uma <strong>"Senha de App"</strong> — explicado na próxima etapa.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 2. CREDENCIAIS ══ -->
+    <div class="section" id="credenciais">
+      <div class="section-header">
+        <div class="section-icon" style="background:#fef3c7;">🔑</div>
+        <div>
+          <h2>Etapa 2 — Obter Credenciais</h2>
+          <p>Anote todas as chaves em um bloco de notas antes de continuar</p>
+        </div>
+      </div>
+
+      <div class="alert alert-danger">
+        <div class="alert-icon">🚨</div>
+        <div class="alert-body">
+          <strong>NUNCA compartilhe estas chaves!</strong> Não coloque no GitHub, não envie por WhatsApp. Quem tiver estas chaves pode cobrar em seu nome.
+        </div>
+      </div>
+
+      <!-- Cloudinary -->
+      <div class="card">
+        <div class="card-title">☁️ Cloudinary — Chaves de API</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Acesse o Dashboard</h3>
+              <p>Após fazer login, você já estará no Dashboard principal. No topo da página aparece um quadro com suas credenciais.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>Anote as 3 informações</h3>
+              <p>Você precisará de:</p>
+              <ul style="margin-top:8px;padding-left:16px;font-size:14px;color:var(--gray-600)">
+                <li><code>Cloud Name</code> — ex: dxyz123abc</li>
+                <li><code>API Key</code> — ex: 123456789012345</li>
+                <li><code>API Secret</code> — clique em "Reveal" para ver</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stripe -->
+      <div class="card">
+        <div class="card-title">💳 Stripe — Chaves de API</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Acesse Developers → API Keys</h3>
+              <p>No painel do Stripe, clique em <strong>Developers</strong> no menu superior, depois em <strong>API Keys</strong>.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>Copie as chaves</h3>
+              <p>Anote:</p>
+              <ul style="margin-top:8px;padding-left:16px;font-size:14px;color:var(--gray-600)">
+                <li><code>Publishable key</code> — começa com <code>pk_test_</code></li>
+                <li><code>Secret key</code> — clique em "Reveal" — começa com <code>sk_test_</code></li>
+              </ul>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h3>Criar Webhook</h3>
+              <p>Vá em <strong>Developers → Webhooks → Add endpoint</strong>. No campo URL, coloque:<br/>
+              <code>https://SUA-API-URL.railway.app/api/payments/webhook/stripe</code></p>
+              <p style="margin-top:8px;">Em eventos, selecione: <code>checkout.session.completed</code>, <code>payment_intent.payment_failed</code>, <code>charge.refunded</code>. Clique em "Add endpoint" e copie o <strong>Signing secret</strong> (<code>whsec_...</code>).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mercado Pago -->
+      <div class="card">
+        <div class="card-title">📱 Mercado Pago — Access Token</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Acesse o Portal de Desenvolvedores</h3>
+              <p>Vá em <a href="https://www.mercadopago.com.br/developers/panel" target="_blank">mercadopago.com.br/developers/panel</a> e faça login.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>Crie um Aplicativo</h3>
+              <p>Clique em <strong>"Criar aplicativo"</strong>, dê um nome (ex: "MinhaSexShop"), selecione <strong>Pagamentos online</strong> e clique em Criar.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">
+              <h3>Copie as credenciais</h3>
+              <p>Na aba <strong>Credenciais de teste</strong>, anote o <code>Access Token</code> (começa com <code>TEST-</code>). Para produção real, use a aba <strong>Credenciais de produção</strong>.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gmail SMTP -->
+      <div class="card">
+        <div class="card-title">📧 Gmail — Senha de App para SMTP</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">
+              <h3>Ative a verificação em 2 etapas</h3>
+              <p>Acesse <a href="https://myaccount.google.com/security" target="_blank">myaccount.google.com/security</a> e ative a <strong>Verificação em duas etapas</strong> se ainda não tiver.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">
+              <h3>Gere a Senha de App</h3>
+              <p>Na mesma página de segurança, procure por <strong>"Senhas de app"</strong> (pode precisar buscar). Clique, escolha <strong>Outro (nome personalizado)</strong>, digite "SexShop" e clique em Gerar.</p>
+              <p style="margin-top:8px;">Anote a senha gerada (16 caracteres sem espaços). <strong>Essa senha só aparece uma vez.</strong></p>
+            </div>
+          </div>
+        </div>
+        <div class="alert alert-info" style="margin-top:12px;">
+          <div class="alert-icon">💡</div>
+          <div class="alert-body">
+            <strong>Suas configurações SMTP serão:</strong><br/>
+            Host: <code>smtp.gmail.com</code> | Porta: <code>587</code> | Usuário: <code>seu@gmail.com</code> | Senha: <em>a senha de 16 dígitos gerada</em>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 3. GITHUB ══ -->
+    <div class="section" id="github">
+      <div class="section-header">
+        <div class="section-icon" style="background:#f3f4f6;">🐙</div>
+        <div>
+          <h2>Etapa 3 — Subir o Código para o GitHub</h2>
+          <p>Com Node.js e Git instalados no seu PC</p>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Crie o repositório no GitHub</h3>
+            <p>Acesse <a href="https://github.com/new" target="_blank">github.com/new</a>. Preencha:</p>
+            <ul style="margin-top:8px;padding-left:16px;font-size:14px;color:var(--gray-600)">
+              <li><strong>Repository name:</strong> sexshop-ecommerce</li>
+              <li><strong>Visibility:</strong> Private (recomendado)</li>
+              <li>⚠️ NÃO marque "Add a README file"</li>
+            </ul>
+            <p style="margin-top:8px;">Clique em <strong>"Create repository"</strong>. Copie a URL que aparece (ex: <code>https://github.com/usuario/sexshop-ecommerce.git</code>).</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Abra o terminal na pasta do projeto</h3>
+            <p>No VS Code, pressione <code>Ctrl + `</code> (acento grave). O terminal abrirá já dentro da pasta do projeto.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Execute os comandos Git</h3>
+            <p>Cole e execute um por um:</p>
+            <div class="code-block">
+              <div class="code-header">
+                <span>terminal</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+              </div>
+              <pre>git init
+git add .
+git commit -m "feat: initial project setup"
+git branch -M main
+git remote add origin https://github.com/SEU_USUARIO/sexshop-ecommerce.git
+git push -u origin main</pre>
+            </div>
+            <div class="alert alert-warning" style="margin-top:8px;">
+              <div class="alert-icon">⚠️</div>
+              <div class="alert-body">Substitua <code>SEU_USUARIO</code> pelo seu nome de usuário do GitHub.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Confirme o envio</h3>
+            <p>Acesse <code>github.com/SEU_USUARIO/sexshop-ecommerce</code> no navegador. Você deve ver todos os arquivos do projeto listados.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 4. RAILWAY PROJETO ══ -->
+    <div class="section" id="railway-projeto">
+      <div class="section-header">
+        <div class="section-icon" style="background:#f3e8ff;">🚂</div>
+        <div>
+          <h2>Etapa 4 — Criar Projeto no Railway</h2>
+          <p>Conectando o Railway ao seu repositório GitHub</p>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Acesse o Railway</h3>
+            <p>Vá em <a href="https://railway.app/dashboard" target="_blank">railway.app/dashboard</a> e faça login com GitHub.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Crie um novo projeto</h3>
+            <p>Clique no botão <strong>"New Project"</strong> (botão roxo no canto superior direito).</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Escolha "Deploy from GitHub repo"</h3>
+            <p>Selecione essa opção, autorize o Railway a acessar seu GitHub se pedido, e então selecione o repositório <strong>sexshop-ecommerce</strong>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Aguarde a detecção automática</h3>
+            <p>O Railway vai detectar o arquivo <code>railway.toml</code> e reconhecer que são dois serviços (api e web). Clique em <strong>"Deploy Now"</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        <div class="alert-icon">💡</div>
+        <div class="alert-body">
+          <strong>O primeiro deploy vai falhar</strong> — isso é normal! Ainda precisamos configurar o banco de dados e as variáveis de ambiente. Continue seguindo o manual.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 5. BANCO ══ -->
+    <div class="section" id="railway-banco">
+      <div class="section-header">
+        <div class="section-icon" style="background:#dbeafe;">🐘</div>
+        <div>
+          <h2>Etapa 5 — Adicionar Banco PostgreSQL</h2>
+          <p>O Railway oferece PostgreSQL gerenciado gratuitamente</p>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>No painel do projeto, clique em "New"</h3>
+            <p>Dentro do seu projeto no Railway, clique no botão <strong>"+ New"</strong> ou <strong>"New Service"</strong>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Selecione "Database → PostgreSQL"</h3>
+            <p>Clique em <strong>Database</strong> e depois em <strong>PostgreSQL</strong>. O Railway criará o banco automaticamente em segundos.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Copie a DATABASE_URL</h3>
+            <p>Clique no serviço PostgreSQL criado, vá na aba <strong>"Variables"</strong> e copie o valor da variável <code>DATABASE_URL</code>. Ela se parece com:</p>
+            <div class="code-block">
+              <div class="code-header"><span>DATABASE_URL</span></div>
+              <pre>postgresql://postgres:SenhaGerada@containers-us-west-XX.railway.app:PORTA/railway</pre>
+            </div>
+            <p style="margin-top:8px;">Guarde essa URL — você vai usá-la na próxima etapa.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 6. API ══ -->
+    <div class="section" id="railway-api">
+      <div class="section-header">
+        <div class="section-icon" style="background:#d1fae5;">⚙️</div>
+        <div>
+          <h2>Etapa 6 — Configurar o Serviço da API</h2>
+          <p>Apontando o Railway para o código do backend</p>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Clique no serviço "api" no painel</h3>
+            <p>Você verá os serviços criados automaticamente pelo <code>railway.toml</code>. Clique no serviço chamado <strong>api</strong>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Verifique as configurações de build</h3>
+            <p>Na aba <strong>Settings</strong>, confirme que:</p>
+            <ul style="margin-top:8px;padding-left:16px;font-size:14px;color:var(--gray-600)">
+              <li><strong>Root Directory:</strong> <code>apps/api</code></li>
+              <li><strong>Build Command:</strong> <code>npm run build</code></li>
+              <li><strong>Start Command:</strong> <code>npm run start</code></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Gere um domínio público para a API</h3>
+            <p>Na aba <strong>Settings</strong>, procure por <strong>"Networking"</strong> ou <strong>"Public Networking"</strong> e clique em <strong>"Generate Domain"</strong>. Anote a URL gerada — você vai precisar dela para configurar o frontend.</p>
+            <p style="margin-top:8px;">Ficará algo como: <code>api-sexshop-production.up.railway.app</code></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 7. WEB ══ -->
+    <div class="section" id="railway-web">
+      <div class="section-header">
+        <div class="section-icon" style="background:#fce7f3;">🖥️</div>
+        <div>
+          <h2>Etapa 7 — Configurar o Serviço do Frontend</h2>
+          <p>Apontando o Railway para o código do Next.js</p>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Clique no serviço "web"</h3>
+            <p>De volta ao painel do projeto, clique no serviço chamado <strong>web</strong>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Confirme as configurações</h3>
+            <p>Na aba <strong>Settings</strong>, verifique:</p>
+            <ul style="margin-top:8px;padding-left:16px;font-size:14px;color:var(--gray-600)">
+              <li><strong>Root Directory:</strong> <code>apps/web</code></li>
+              <li><strong>Build Command:</strong> <code>npm run build</code></li>
+              <li><strong>Start Command:</strong> <code>npm run start</code></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Gere o domínio do frontend</h3>
+            <p>Também em <strong>Settings → Networking → Generate Domain</strong>. Este será o endereço da sua loja. Anote também.</p>
+            <p style="margin-top:8px;">Ficará algo como: <code>sexshop-production.up.railway.app</code></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 8. VARIÁVEIS ══ -->
+    <div class="section" id="variaveis">
+      <div class="section-header">
+        <div class="section-icon" style="background:#fef9c3;">🔐</div>
+        <div>
+          <h2>Etapa 8 — Configurar Variáveis de Ambiente</h2>
+          <p>A etapa mais importante — configure com atenção</p>
+        </div>
+      </div>
+
+      <div class="alert alert-warning">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-body">
+          <strong>Configure as variáveis no serviço correto!</strong> Variáveis da API vão no serviço <strong>api</strong>. Variáveis do frontend (NEXT_PUBLIC_*) vão no serviço <strong>web</strong>.
+        </div>
+      </div>
+
+      <p style="font-size:14px;color:var(--gray-600);margin-bottom:16px;">Para adicionar variáveis: clique no serviço → aba <strong>Variables</strong> → botão <strong>"+ New Variable"</strong>.</p>
+
+      <!-- API Variables -->
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-title">⚙️ Variáveis do Serviço: API</div>
+        <table class="env-table">
+          <thead>
+            <tr>
+              <th>Variável</th>
+              <th>Descrição</th>
+              <th>Exemplo / Onde obter</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="var-name">NODE_ENV</td>
+              <td class="var-desc">Ambiente de execução</td>
+              <td class="var-example">production</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">PORT</td>
+              <td class="var-desc">Porta da API</td>
+              <td class="var-example">3001</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">DATABASE_URL</td>
+              <td class="var-desc">URL do PostgreSQL</td>
+              <td class="var-example">Copiar do serviço PostgreSQL no Railway</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">JWT_ACCESS_SECRET</td>
+              <td class="var-desc">Segredo do token de acesso</td>
+              <td class="var-example">Gerar string aleatória de 32+ chars</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">JWT_REFRESH_SECRET</td>
+              <td class="var-desc">Segredo do refresh token</td>
+              <td class="var-example">Gerar string aleatória diferente</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">ENCRYPTION_KEY</td>
+              <td class="var-desc">Chave AES-256 (64 chars hex)</td>
+              <td class="var-example">Gerar 64 caracteres hexadecimais</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">FRONTEND_URL</td>
+              <td class="var-desc">URL do frontend (CORS)</td>
+              <td class="var-example">https://sexshop.up.railway.app</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">STRIPE_SECRET_KEY</td>
+              <td class="var-desc">Chave secreta Stripe</td>
+              <td class="var-example">sk_live_... (Stripe → API Keys)</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">STRIPE_WEBHOOK_SECRET</td>
+              <td class="var-desc">Segredo do webhook Stripe</td>
+              <td class="var-example">whsec_... (Stripe → Webhooks)</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">MERCADOPAGO_ACCESS_TOKEN</td>
+              <td class="var-desc">Token do Mercado Pago</td>
+              <td class="var-example">APP_USR-... (MP Developers)</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">CLOUDINARY_CLOUD_NAME</td>
+              <td class="var-desc">Nome da cloud</td>
+              <td class="var-example">Dashboard Cloudinary</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">CLOUDINARY_API_KEY</td>
+              <td class="var-desc">Chave de API Cloudinary</td>
+              <td class="var-example">Dashboard Cloudinary</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">CLOUDINARY_API_SECRET</td>
+              <td class="var-desc">Segredo Cloudinary</td>
+              <td class="var-example">Dashboard Cloudinary → Reveal</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">SMTP_HOST</td>
+              <td class="var-desc">Servidor de e-mail</td>
+              <td class="var-example">smtp.gmail.com</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">SMTP_PORT</td>
+              <td class="var-desc">Porta SMTP</td>
+              <td class="var-example">587</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">SMTP_USER</td>
+              <td class="var-desc">Seu Gmail</td>
+              <td class="var-example">seu@gmail.com</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">SMTP_PASS</td>
+              <td class="var-desc">Senha de App Gmail</td>
+              <td class="var-example">xxxx xxxx xxxx xxxx</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">SMTP_FROM</td>
+              <td class="var-desc">Remetente dos e-mails</td>
+              <td class="var-example">noreply@minhaloja.com</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Web Variables -->
+      <div class="card">
+        <div class="card-title">🖥️ Variáveis do Serviço: Web (Frontend)</div>
+        <table class="env-table">
+          <thead>
+            <tr>
+              <th>Variável</th>
+              <th>Descrição</th>
+              <th>Valor</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="var-name">NEXT_PUBLIC_API_URL</td>
+              <td class="var-desc">URL pública da API</td>
+              <td class="var-example">https://api-sexshop.up.railway.app</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY</td>
+              <td class="var-desc">Chave pública Stripe</td>
+              <td class="var-example">pk_live_... (Stripe → API Keys)</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">NEXT_PUBLIC_MP_PUBLIC_KEY</td>
+              <td class="var-desc">Chave pública Mercado Pago</td>
+              <td class="var-example">APP_USR-... (MP Developers)</td>
+              <td><span class="badge badge-required">obrig.</span></td>
+            </tr>
+            <tr>
+              <td class="var-name">NEXT_PUBLIC_STORE_NAME</td>
+              <td class="var-desc">Nome da loja</td>
+              <td class="var-example">Minha Sex Shop</td>
+              <td><span class="badge badge-optional">opcional</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Gerar secrets -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">🎲 Como gerar os segredos JWT e ENCRYPTION_KEY</div>
+        <p style="font-size:14px;color:var(--gray-600);margin-bottom:12px;">Abra o terminal no seu PC e rode estes comandos — cada um gera uma chave aleatória segura:</p>
+        <div class="code-block">
+          <div class="code-header">
+            <span>terminal (Node.js necessário)</span>
+            <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+          </div>
+          <pre><span class="c"># JWT_ACCESS_SECRET</span>
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+<span class="c"># JWT_REFRESH_SECRET (rode de novo para ter valor diferente)</span>
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+<span class="c"># ENCRYPTION_KEY (precisa de 64 chars hex)</span>
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 9. BANCO DADOS ══ -->
+    <div class="section" id="banco-dados">
+      <div class="section-header">
+        <div class="section-icon" style="background:#d1fae5;">🌱</div>
+        <div>
+          <h2>Etapa 9 — Inicializar o Banco de Dados</h2>
+          <p>Criar as tabelas e popular com dados iniciais</p>
+        </div>
+      </div>
+
+      <div class="alert alert-warning">
+        <div class="alert-icon">⚠️</div>
+        <div class="alert-body">
+          <strong>Faça isso apenas uma vez,</strong> após configurar todas as variáveis de ambiente. Rodar o seed mais de uma vez pode duplicar dados.
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Aguarde a API fazer deploy com sucesso</h3>
+            <p>No Railway, clique no serviço <strong>api</strong> e verifique na aba <strong>Deployments</strong> se o status está como <strong>✅ Success</strong>. Se ainda estiver falhando, verifique se todas as variáveis foram salvas corretamente.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Abra o terminal do serviço api no Railway</h3>
+            <p>Na página do serviço <strong>api</strong>, clique na aba <strong>"Shell"</strong> ou procure o botão <strong>"Open Terminal"</strong>. Isso abre um terminal direto no container da API no Railway.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Execute as migrações do banco</h3>
+            <div class="code-block">
+              <div class="code-header">
+                <span>railway shell (serviço api)</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+              </div>
+              <pre>npx prisma db push</pre>
+            </div>
+            <p style="margin-top:8px;">Isso cria todas as tabelas no PostgreSQL com base no <code>schema.prisma</code>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>Execute o seed (dados iniciais)</h3>
+            <div class="code-block">
+              <div class="code-header">
+                <span>railway shell (serviço api)</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copiar</button>
+              </div>
+              <pre>npx ts-node prisma/seed.ts</pre>
+            </div>
+            <p style="margin-top:8px;">Isso cria o usuário admin, configurações da loja, categorias e métodos de pagamento padrão.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Anote as credenciais criadas</h3>
+            <p>O seed vai exibir no terminal as credenciais do admin:</p>
+            <div class="code-block">
+              <div class="code-header"><span>saída esperada</span></div>
+              <pre>✅ Admin criado: admin@sexshop.com / Admin@123456
+✅ Configurações da loja criadas
+✅ Categorias padrão criadas
+✅ Zonas de frete criadas
+✅ Seed concluído!</pre>
+            </div>
+            <div class="alert alert-warning" style="margin-top:8px;">
+              <div class="alert-icon">⚠️</div>
+              <div class="alert-body">
+                <strong>Troque a senha do admin imediatamente</strong> após o primeiro acesso em <code>/conta/dados</code>.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ 10. DOMÍNIO ══ -->
+    <div class="section" id="dominio">
+      <div class="section-header">
+        <div class="section-icon" style="background:#e0f2fe;">🌐</div>
+        <div>
+          <h2>Etapa 10 — Domínio Personalizado (Opcional)</h2>
+          <p>Configure um domínio próprio como www.minhaloja.com.br</p>
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        <div class="alert-icon">💡</div>
+        <div class="alert-body">
+          <strong>Não é obrigatório.</strong> Seu site já funcionará com o domínio gratuito do Railway (*.up.railway.app). Configure o domínio personalizado quando quiser.
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <h3>Compre um domínio</h3>
+            <p>Recomendamos <a href="https://registro.br" target="_blank">registro.br</a> para domínios .com.br ou <a href="https://namecheap.com" target="_blank">namecheap.com</a> para domínios .com internacionais.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <h3>Adicione o domínio no Railway</h3>
+            <p>No serviço <strong>web</strong>, vá em <strong>Settings → Networking → Custom Domain</strong>. Digite seu domínio (ex: <code>www.minhasexshop.com.br</code>) e clique em <strong>Add Domain</strong>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <h3>Configure o DNS</h3>
+            <p>O Railway vai mostrar um registro <strong>CNAME</strong> para você configurar no painel do seu registrador de domínio. Adicione o registro apontando para o endereço fornecido pelo Railway.</p>
+            <p style="margin-top:8px;">Pode levar até 24h para propagar, mas geralmente é em menos de 1 hora.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <h3>HTTPS automático</h3>
+            <p>O Railway gera o certificado SSL automaticamente. Não precisa fazer nada — o cadeado 🔒 vai aparecer sozinho.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">5</div>
+          <div class="step-body">
+            <h3>Atualize a variável FRONTEND_URL</h3>
+            <p>No serviço <strong>api</strong>, atualize a variável <code>FRONTEND_URL</code> para o seu domínio personalizado. Isso é importante para o CORS funcionar corretamente.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ CHECKLIST ══ -->
+    <div class="section" id="checklist">
+      <div class="section-header">
+        <div class="section-icon" style="background:#d1fae5;">✅</div>
+        <div>
+          <h2>Checklist Final</h2>
+          <p>Confirme cada item antes de divulgar sua loja</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🚀 Infraestrutura</div>
+        <ul class="checklist">
+          <li>Repositório no GitHub com todos os arquivos do projeto</li>
+          <li>Projeto criado no Railway com 3 serviços (api, web, PostgreSQL)</li>
+          <li>Domínios gerados para api e web no Railway</li>
+          <li>Todas as variáveis de ambiente configuradas nos serviços corretos</li>
+          <li>Deploy da API com status ✅ Success</li>
+          <li>Deploy do Frontend com status ✅ Success</li>
+        </ul>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">🗄️ Banco de Dados</div>
+        <ul class="checklist">
+          <li>Comando <code>npx prisma db push</code> executado com sucesso</li>
+          <li>Seed executado — admin, categorias e configurações criados</li>
+          <li>Login no painel admin testado em <code>/entrar</code></li>
+          <li>Senha do admin alterada para uma senha segura</li>
+        </ul>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">💳 Pagamentos</div>
+        <ul class="checklist">
+          <li>Checkout com cartão testado no modo de teste do Stripe</li>
+          <li>Webhook do Stripe configurado com a URL correta da API</li>
+          <li>Pagamento PIX testado com credenciais de teste do Mercado Pago</li>
+          <li>E-mail de confirmação de pedido recebido após compra</li>
+        </ul>
+      </div>
+
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">🛒 Loja</div>
+        <ul class="checklist">
+          <li>Pelo menos uma categoria criada pelo painel admin</li>
+          <li>Pelo menos um produto cadastrado com imagem</li>
+          <li>Nome e logo da loja configurados em <code>/admin/configuracoes</code></li>
+          <li>Imagens de banner da home atualizadas</li>
+          <li>Zonas de frete configuradas para sua região</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ══ PROBLEMAS COMUNS ══ -->
+    <div class="section" id="problemas">
+      <div class="section-header">
+        <div class="section-icon" style="background:#fee2e2;">🔧</div>
+        <div>
+          <h2>Problemas Comuns e Soluções</h2>
+          <p>Se algo der errado, verifique aqui primeiro</p>
+        </div>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">!</div>
+          <div class="step-body">
+            <h3>Deploy falhou — "Environment variable not found"</h3>
+            <p><strong>Causa:</strong> Alguma variável obrigatória não foi configurada.</p>
+            <p><strong>Solução:</strong> Vá no serviço que falhou → aba Variables → compare com a tabela da Etapa 8 e adicione as que estão faltando. Depois clique em <strong>Redeploy</strong>.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">!</div>
+          <div class="step-body">
+            <h3>Frontend abre mas não carrega dados — "Network Error"</h3>
+            <p><strong>Causa:</strong> A variável <code>NEXT_PUBLIC_API_URL</code> está incorreta ou a API está fora do ar.</p>
+            <p><strong>Solução:</strong> Verifique se a URL da API está correta (sem barra no final), se o serviço api está com status Success, e se a variável <code>FRONTEND_URL</code> na api corresponde à URL do frontend.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">!</div>
+          <div class="step-body">
+            <h3>Imagens não aparecem ou não sobem</h3>
+            <p><strong>Causa:</strong> Credenciais do Cloudinary incorretas.</p>
+            <p><strong>Solução:</strong> Verifique as três variáveis Cloudinary no serviço api. O <code>CLOUDINARY_API_SECRET</code> precisa ser revelado clicando em "Reveal" no dashboard do Cloudinary.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">!</div>
+          <div class="step-body">
+            <h3>E-mails não chegam</h3>
+            <p><strong>Causa:</strong> SMTP mal configurado ou usando a senha da conta Google em vez da Senha de App.</p>
+            <p><strong>Solução:</strong> Certifique-se de que <code>SMTP_PASS</code> é a <strong>Senha de App</strong> de 16 caracteres gerada no Google, não a sua senha normal do Gmail.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">!</div>
+          <div class="step-body">
+            <h3>Erro 500 ao tentar pagar</h3>
+            <p><strong>Causa:</strong> Chaves do Stripe ou Mercado Pago inválidas ou webhook não configurado.</p>
+            <p><strong>Solução:</strong> Confirme que está usando as chaves de <strong>teste</strong> (começam com <code>sk_test_</code> e <code>pk_test_</code>) para testar, e as de <strong>produção</strong> apenas quando for abrir a loja de verdade. Verifique também o webhook do Stripe.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-num">!</div>
+          <div class="step-body">
+            <h3>Railway cobra uso excessivo</h3>
+            <p><strong>Causa:</strong> O plano gratuito do Railway tem $5/mês de crédito.</p>
+            <p><strong>Solução:</strong> Monitore o uso em <strong>Settings → Usage</strong>. Para uma loja pequena, os $5 gratuitos cobrem bastante. Quando crescer, o plano Hobby custa $20/mês.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-success" style="margin-top:24px;">
+        <div class="alert-icon">🎉</div>
+        <div class="alert-body">
+          <strong>Precisa de mais ajuda?</strong> Volte ao Claude e descreva exatamente qual erro está aparecendo — cole a mensagem de erro completa que aparece nos logs do Railway (serviço → aba Deployments → clique no deploy → View Logs).
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<footer class="footer">
+  <p>📖 Manual de Deploy — SexShop E-Commerce &nbsp;|&nbsp; Gerado com Claude &nbsp;|&nbsp; Railway + Next.js + Node.js</p>
+</footer>
+
+<script>
+  function copyCode(btn) {
+    const pre = btn.closest('.code-block').querySelector('pre')
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+      btn.textContent = '✓ Copiado!'
+      setTimeout(() => btn.textContent = 'Copiar', 2000)
+    })
+  }
+
+  // Highlight active nav item on scroll
+  const sections = document.querySelectorAll('.section')
+  const navItems = document.querySelectorAll('.nav-item')
+
+  window.addEventListener('scroll', () => {
+    let current = ''
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 80) current = s.id
+    })
+    navItems.forEach(item => {
+      item.classList.remove('active')
+      if (item.getAttribute('href') === '#' + current) {
+        item.classList.add('active')
+      }
+    })
+  })
+</script>
+
+</body>
+</html>
