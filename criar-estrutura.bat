@@ -1,0 +1,62 @@
+@echo off
+echo Criando estrutura de pastas...
+
+mkdir apps\api\src\lib
+mkdir apps\api\src\middleware
+mkdir apps\api\src\modules\auth
+mkdir apps\api\src\modules\products
+mkdir apps\api\src\modules\categories
+mkdir apps\api\src\modules\orders
+mkdir apps\api\src\modules\payments
+mkdir apps\api\src\modules\coupons
+mkdir apps\api\src\modules\shipping
+mkdir apps\api\src\modules\reviews
+mkdir apps\api\src\modules\banners
+mkdir apps\api\src\modules\wishlist
+mkdir apps\api\src\modules\admin
+mkdir apps\api\src\modules\settings
+mkdir apps\api\src\__tests__
+mkdir apps\web\src\app\produtos\[slug]
+mkdir apps\web\src\app\carrinho
+mkdir apps\web\src\app\checkout\pix
+mkdir apps\web\src\app\checkout\success
+mkdir apps\web\src\app\conta\pedidos\[id]
+mkdir apps\web\src\app\conta\dados
+mkdir apps\web\src\app\conta\enderecos
+mkdir apps\web\src\app\conta\lista-desejos
+mkdir apps\web\src\app\entrar
+mkdir apps\web\src\app\cadastro
+mkdir apps\web\src\app\esqueci-a-senha
+mkdir apps\web\src\app\admin\produtos
+mkdir apps\web\src\app\admin\categorias
+mkdir apps\web\src\app\admin\pedidos
+mkdir apps\web\src\app\admin\clientes
+mkdir apps\web\src\app\admin\cupons
+mkdir apps\web\src\app\admin\banners
+mkdir apps\web\src\app\admin\avaliacoes
+mkdir apps\web\src\app\admin\configuracoes
+mkdir apps\web\src\app\admin\relatorios
+mkdir apps\web\src\app\admin\frete
+mkdir apps\web\src\app\admin\pagamentos
+mkdir apps\web\src\components\layout
+mkdir apps\web\src\components\product
+mkdir apps\web\src\components\cart
+mkdir apps\web\src\components\checkout
+mkdir apps\web\src\components\home
+mkdir apps\web\src\components\ui
+mkdir apps\web\src\components\admin\products
+mkdir apps\web\src\components\admin\categories
+mkdir apps\web\src\components\admin\coupons
+mkdir apps\web\src\components\admin\banners
+mkdir apps\web\src\components\admin\shipping
+mkdir apps\web\src\components\account
+mkdir apps\web\src\lib
+mkdir apps\web\src\stores
+mkdir apps\web\src\hooks
+mkdir apps\web\src\types
+mkdir packages\shared\src
+mkdir prisma
+mkdir logs
+
+echo Estrutura criada com sucesso!
+pause

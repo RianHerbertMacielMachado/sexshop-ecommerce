@@ -1,0 +1,27 @@
+{
+  "name": "sexshop-ecommerce",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "db:generate": "prisma generate --schema=prisma/schema.prisma",
+    "db:push": "prisma db push --schema=prisma/schema.prisma",
+    "db:seed": "ts-node prisma/seed.ts",
+    "db:studio": "prisma studio --schema=prisma/schema.prisma",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\""
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "prettier": "^3.2.0",
+    "typescript": "^5.4.0",
+    "prisma": "^5.14.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0"
+  },
+  "engines": { "node": ">=20", "npm": ">=10" }
+}
