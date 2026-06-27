@@ -10,7 +10,7 @@ import { api } from '@/lib/api'
 import { useCart } from '@/hooks/useCart'
 import { useAuthStore } from '@/stores/authStore'
 import { useWishlistStore } from '@/stores/wishlistStore'
-import { formatCurrency, calculateDiscount, cn } from '@/lib/utils'
+import { formatCurrency, calculateDiscount, cn, isPlaceholderUrl } from '@/lib/utils'
 import { formatStockStatus } from '@/lib/formatters'
 import type { Product, ProductVariant } from '@/types'
 import ProductCard from './ProductCard'
@@ -97,6 +97,7 @@ export default function ProductDetailClient({ product }: Props) {
                 className="object-cover group-hover:scale-105 transition-transform duration-500"
                 priority
                 sizes="(max-width: 1024px) 100vw, 50vw"
+                unoptimized={isPlaceholderUrl(product.images[selectedImage])}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -120,7 +121,7 @@ export default function ProductDetailClient({ product }: Props) {
                     i === selectedImage ? 'border-violet-500 scale-95' : 'border-transparent hover:border-zinc-300'
                   )}
                 >
-                  <Image src={img} alt={`${product.name} ${i + 1}`} width={64} height={64} className="w-full h-full object-cover" />
+                  <Image src={img} alt={`${product.name} ${i + 1}`} width={64} height={64} className="w-full h-full object-cover" unoptimized={isPlaceholderUrl(img)} />
                 </button>
               ))}
             </div>

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { ShoppingCart, Heart, Eye, Star } from 'lucide-react'
-import { formatCurrency, calculateDiscount, cn } from '@/lib/utils'
+import { formatCurrency, calculateDiscount, cn, isPlaceholderUrl } from '@/lib/utils'
 import { useCart } from '@/hooks/useCart'
 import { useAuthStore } from '@/stores/authStore'
 import { useWishlistStore } from '@/stores/wishlistStore'
@@ -59,6 +59,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
             alt={product.name}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
+            unoptimized={isPlaceholderUrl(product.images?.[0])}
           />
 
           ) : (

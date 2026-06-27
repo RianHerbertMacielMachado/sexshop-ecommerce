@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { Banner } from '@/types'
+import { isPlaceholderUrl } from '@/lib/utils'
 
 export default function MiddleBanner() {
   const { data: banners = [] } = useQuery<Banner[]>({
@@ -26,7 +27,7 @@ export default function MiddleBanner() {
       viewport={{ once: true }}
       className="relative h-48 md:h-64 overflow-hidden bg-zinc-900 my-2"
     >
-      <Image src={banner.imageUrl ?? '/placeholder.svg'} alt={banner.title ?? ''} fill className="object-cover opacity-80" sizes="100vw" />
+      <Image src={banner.imageUrl ?? '/placeholder.svg'} alt={banner.title ?? ''} fill className="object-cover opacity-80" sizes="100vw" unoptimized={isPlaceholderUrl(banner.imageUrl)} />
       <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent" />
       <div className="absolute inset-0 flex items-center container mx-auto px-4 md:px-12">
         <div>

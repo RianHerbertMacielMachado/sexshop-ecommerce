@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { CategorySummary } from '@/types'
+import { isPlaceholderUrl } from '@/lib/utils'
 
 export default function CategoriesGrid() {
   const { data: categories = [] } = useQuery<CategorySummary[]>({
@@ -46,7 +47,7 @@ export default function CategoriesGrid() {
               <Link href={`/categorias/${cat.slug}`} className="group flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-violet-50 transition-all">
                 <div className="w-16 h-16 rounded-2xl overflow-hidden bg-gradient-to-br from-violet-100 to-pink-100 flex items-center justify-center group-hover:scale-105 transition-transform shadow-sm">
                   {cat.imageUrl ? (
-                    <Image src={cat.imageUrl} alt={cat.name} width={64} height={64} className="w-full h-full object-cover" />
+                    <Image src={cat.imageUrl} alt={cat.name} width={64} height={64} className="w-full h-full object-cover" unoptimized={isPlaceholderUrl(cat.imageUrl)} />
                   ) : (
                     <span className="text-2xl">🛍️</span>
                   )}

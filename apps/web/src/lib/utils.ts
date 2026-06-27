@@ -10,6 +10,21 @@ export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs))
 }
 
+/**
+ * Retorna true se a URL for de um domínio de placeholder (ex: placehold.co).
+ * Esses serviços retornam SVG dinâmico que o Next.js Image Optimizer (sharp)
+ * não consegue processar, resultando em 400. Use `unoptimized` nesses casos.
+ */
+export function isPlaceholderUrl(url: string | null | undefined): boolean {
+  if (!url) return false
+  try {
+    const { hostname } = new URL(url)
+    return hostname === 'placehold.co' || hostname === 'via.placeholder.com'
+  } catch {
+    return false
+  }
+}
+
 export function formatCurrency(value: number): string {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',

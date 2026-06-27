@@ -8,7 +8,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { Banner } from '@/types'
-import { cn } from '@/lib/utils'
+import { cn, isPlaceholderUrl } from '@/lib/utils'
 
 export default function HeroBanner() {
   const [current, setCurrent] = useState(0)
@@ -94,6 +94,7 @@ export default function HeroBanner() {
                   priority={i === 0}
                   className="object-cover"
                   sizes="100vw"
+                  unoptimized={isPlaceholderUrl(banner.imageUrl)}
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
 
