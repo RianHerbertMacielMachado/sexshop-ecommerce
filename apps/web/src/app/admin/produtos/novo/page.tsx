@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -62,7 +62,8 @@ export default function AdminNewProductPage() {
 
   // Image URLs state (managed separately — not part of react-hook-form)
   const [images, setImages] = useState<string[]>([])
-  const [imageInput, setImageInput] = useState('')
+  // useRef evita que re-renders do react-hook-form resetem o valor do input
+  const imageInputRef = useRef<HTMLInputElement>(null)
   const [showSeo, setShowSeo] = useState(false)
 
   // Fetch categories for the select
@@ -120,14 +121,18 @@ export default function AdminNewProductPage() {
 
   // ── Image helpers ──────────────────────────────────────────────────────────
   const addImage = () => {
-    const url = imageInput.trim()
-    if (!url) return
+    const url = imageInputRef.current?.value.trim() ?? ''
+    if (!url) {
+      toast.error('Cole uma URL de imagem antes de adicionar.')
+      return
+    }
     if (images.includes(url)) {
       toast.error('URL já adicionada.')
       return
     }
     setImages((prev) => [...prev, url])
-    setImageInput('')
+    // Limpa o input diretamente via ref (sem causar re-render do formulário)
+    if (imageInputRef.current) imageInputRef.current.value = ''
   }
 
   const removeImage = (url: string) => {
@@ -357,8 +362,7 @@ export default function AdminNewProductPage() {
           <div className="space-y-3">
             <div className="flex gap-2">
               <Input
-                value={imageInput}
-                onChange={(e) => setImageInput(e.target.value)}
+                ref={imageInputRef}
                 onKeyDown={handleImageKeyDown}
                 placeholder="Cole a URL da imagem e pressione Enter ou clique em Adicionar"
                 className="flex-1"
