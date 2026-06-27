@@ -1,6 +1,6 @@
 # ============================================================
-# Dockerfile para a API (contexto: raiz do monorepo)
-# Build com: docker build -f apps/api/Dockerfile .
+# Dockerfile para a API
+# Railway Root Directory: / (raiz do monorepo)
 # ============================================================
 
 # ============================================================
@@ -14,25 +14,18 @@ WORKDIR /app
 
 # Copia arquivos de dependências do monorepo
 COPY package*.json ./
-COPY turbo.json ./
 COPY tsconfig.json ./
-
-# Copia package.json de cada workspace
 COPY apps/api/package*.json ./apps/api/
-COPY packages/shared/package*.json ./packages/shared/
 
 # Instala todas as dependências
-RUN npm ci --workspace=apps/api --workspace=packages/shared --include-workspace-root
+RUN npm ci --workspace=apps/api --include-workspace-root
 
-# Copia o schema Prisma
+# Copia o schema Prisma e gera o client
 COPY prisma ./prisma/
-
-# Gera o Prisma Client
 RUN npx prisma generate
 
-# Copia o código fonte
+# Copia o código fonte da API
 COPY apps/api ./apps/api/
-COPY packages/shared ./packages/shared/
 
 # Compila a API
 RUN cd apps/api && npx tsc --project tsconfig.json
@@ -48,7 +41,6 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-# Cria usuário não-root por segurança
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nodeapp
 
@@ -61,10 +53,9 @@ COPY --from=builder /app/prisma ./prisma
 # Instala apenas dependências de produção
 RUN npm ci --omit=dev && npm cache clean --force
 
-# Gera o Prisma Client novamente no ambiente de produção
+# Gera o Prisma Client no ambiente de produção
 RUN npx prisma generate
 
-# Ajusta permissões
 RUN chown -R nodeapp:nodejs /app
 
 USER nodeapp

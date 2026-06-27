@@ -1,6 +1,6 @@
 # ============================================================
-# Dockerfile para o Web (contexto: raiz do monorepo)
-# Build com: docker build -f apps/web/Dockerfile .
+# Dockerfile para o Web
+# Railway Root Directory: / (raiz do monorepo)
 # ============================================================
 
 # ============================================================
@@ -14,9 +14,6 @@ WORKDIR /app
 
 # Copia arquivos de dependências do monorepo
 COPY package*.json ./
-COPY turbo.json ./
-
-# Copia package.json de cada workspace
 COPY apps/web/package*.json ./apps/web/
 
 # Instala todas as dependências
@@ -32,8 +29,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 
-# Copia todo o código
-COPY . .
+# Copia o código do app
+COPY package*.json ./
+COPY apps/web ./apps/web/
 
 # Variáveis de build (injetadas pelo Railway em build time)
 ARG NEXT_PUBLIC_API_URL
