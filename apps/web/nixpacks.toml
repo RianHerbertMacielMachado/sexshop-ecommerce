@@ -1,0 +1,14 @@
+# Nixpacks config para o serviço WEB no Railway
+# Usado quando o Railway detecta Nixpacks ao invés do Dockerfile
+
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["cd apps/web && npm run build"]
+
+[start]
+cmd = "npm run start:web"

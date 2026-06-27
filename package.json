@@ -10,6 +10,8 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "start": "turbo run start",
+    "start:web": "cd apps/web && next start",
+    "start:api": "cd apps/api && node dist/server.js",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "test": "turbo run test",
@@ -23,8 +25,10 @@
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
+  "dependencies": {
+    "turbo": "^2.0.0"
+  },
   "devDependencies": {
-    "turbo": "^2.0.0",
     "prettier": "^3.3.0",
     "typescript": "^5.5.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
