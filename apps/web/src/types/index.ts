@@ -319,14 +319,23 @@ export interface SiteSettings {
   id: string
   storeName: string
   storeDescription?: string | null
-  storeEmail: string
+  storeEmail?: string | null
   storePhone?: string | null
+  storeWhatsapp?: string | null
+  /** backend usa storeCNPJ (maiúsculo) — mantemos ambos por compatibilidade */
+  storeCNPJ?: string | null
   storeCnpj?: string | null
   logoUrl?: string | null
   faviconUrl?: string | null
   freeShippingThreshold?: number | null
   maintenanceMode: boolean
-  allowGuestCheckout: boolean
+  maintenanceMessage?: string | null
+  allowGuestCheckout?: boolean | null
+  /** backend usa seoTitle / seoDescription / seoKeywords */
+  seoTitle?: string | null
+  seoDescription?: string | null
+  seoKeywords?: string | null
+  /** legacy — alguns lugares ainda usam metaTitle/metaDescription */
   metaTitle?: string | null
   metaDescription?: string | null
   primaryColor?: string | null
