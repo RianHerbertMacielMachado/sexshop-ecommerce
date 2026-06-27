@@ -22,19 +22,19 @@ const envSchema = z.object({
   MP_PUBLIC_KEY: z.string().optional(),
   MP_WEBHOOK_URL: z.string().url().optional(),
 
-  CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME é obrigatória'),
-  CLOUDINARY_API_KEY: z.string().min(1, 'CLOUDINARY_API_KEY é obrigatória'),
-  CLOUDINARY_API_SECRET: z.string().min(1, 'CLOUDINARY_API_SECRET é obrigatória'),
+  CLOUDINARY_CLOUD_NAME: z.string().optional().default(''),
+  CLOUDINARY_API_KEY: z.string().optional().default(''),
+  CLOUDINARY_API_SECRET: z.string().optional().default(''),
 
-  SMTP_HOST: z.string().min(1, 'SMTP_HOST é obrigatório'),
+  SMTP_HOST: z.string().optional().default(''),
   SMTP_PORT: z.string().default('587').transform(Number),
   SMTP_SECURE: z
     .string()
     .default('false')
     .transform((v) => v === 'true'),
-  SMTP_USER: z.string().min(1, 'SMTP_USER é obrigatório'),
-  SMTP_PASS: z.string().min(1, 'SMTP_PASS é obrigatória'),
-  EMAIL_FROM: z.string().min(1, 'EMAIL_FROM é obrigatório'),
+  SMTP_USER: z.string().optional().default(''),
+  SMTP_PASS: z.string().optional().default(''),
+  EMAIL_FROM: z.string().optional().default('noreply@sualoja.com.br'),
 })
 
 const parsed = envSchema.safeParse(process.env)

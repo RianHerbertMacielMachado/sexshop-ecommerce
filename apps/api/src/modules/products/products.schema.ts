@@ -79,7 +79,24 @@ export const createVariantSchema = z.object({
   }),
 })
 
+export const updateVariantSchema = z.object({
+  body: z.object({
+    name: z.string().min(1).optional(),
+    value: z.string().min(1).optional(),
+    price: z.coerce.number().positive().optional().nullable(),
+    stock: z.coerce.number().int().min(0).optional(),
+    sku: z.string().optional().nullable(),
+    isActive: z.coerce.boolean().optional(),
+  }),
+  query: z.object({}).optional(),
+  params: z.object({
+    id: z.string().cuid(),
+    variantId: z.string().cuid(),
+  }),
+})
+
 export type CreateProductInput = z.infer<typeof createProductSchema>['body']
 export type UpdateProductInput = z.infer<typeof updateProductSchema>['body']
 export type ListProductsQuery = z.infer<typeof listProductsSchema>['query']
 export type CreateVariantInput = z.infer<typeof createVariantSchema>['body']
+export type UpdateVariantInput = z.infer<typeof updateVariantSchema>['body']

@@ -4,10 +4,10 @@ import { z } from 'zod'
 
 export const createCouponSchema = z.object({
   code: z.string().min(3).max(50).toUpperCase().trim(),
-  type: z.enum(['PERCENTAGE', 'FIXED']),
-  value: z.number().positive(),
-  minOrderValue: z.number().positive().optional().nullable(),
-  maxDiscountValue: z.number().positive().optional().nullable(),
+  type: z.enum(['PERCENTAGE', 'FIXED', 'FREE_SHIPPING']),
+  value: z.number().min(0),
+  minOrderValue: z.number().min(0).optional().nullable(),
+  maxDiscountValue: z.number().min(0).optional().nullable(),
   maxUses: z.number().int().positive().optional().nullable(),
   expiresAt: z.string().datetime().optional().nullable(),
   isActive: z.boolean().default(true),

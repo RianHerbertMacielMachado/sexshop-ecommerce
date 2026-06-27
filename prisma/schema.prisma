@@ -37,9 +37,10 @@ enum CouponType {
 }
 
 enum PaymentMethodType {
-  STRIPE
+  STRIPE_CARD
   PIX
   BOLETO
+  MANUAL
 }
 
 enum BannerPosition {
@@ -143,30 +144,36 @@ model Category {
 }
 
 model Product {
-  id              String           @id @default(cuid())
-  name            String
-  slug            String           @unique
-  description     String?
-  price           Decimal          @db.Decimal(10, 2)
-  compareAtPrice  Decimal?         @db.Decimal(10, 2)
-  sku             String           @unique
-  stock           Int              @default(0)
-  weight          Decimal?         @db.Decimal(8, 3)
-  images          String[]
-  categoryId      String
-  isActive        Boolean          @default(true)
-  isFeatured      Boolean          @default(false)
-  isDiscreet      Boolean          @default(false)
-  tags            String[]
-  metaTitle       String?
-  metaDescription String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  category        Category         @relation(fields: [categoryId], references: [id])
-  variants        ProductVariant[]
-  orderItems      OrderItem[]
-  reviews         Review[]
-  wishlist        Wishlist[]
+  id               String           @id @default(cuid())
+  name             String
+  slug             String           @unique
+  description      String?
+  shortDescription String?
+  price            Decimal          @db.Decimal(10, 2)
+  compareAtPrice   Decimal?         @db.Decimal(10, 2)
+  comparePrice     Decimal?         @db.Decimal(10, 2)
+  costPrice        Decimal?         @db.Decimal(10, 2)
+  sku              String           @unique
+  stock            Int              @default(0)
+  soldCount        Int              @default(0)
+  averageRating    Float            @default(0)
+  reviewCount      Int              @default(0)
+  weight           Decimal?         @db.Decimal(8, 3)
+  images           String[]
+  categoryId       String
+  isActive         Boolean          @default(true)
+  isFeatured       Boolean          @default(false)
+  isDiscreet       Boolean          @default(false)
+  tags             String[]
+  metaTitle        String?
+  metaDescription  String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  category         Category         @relation(fields: [categoryId], references: [id])
+  variants         ProductVariant[]
+  orderItems       OrderItem[]
+  reviews          Review[]
+  wishlist         Wishlist[]
 
   @@index([slug])
   @@index([categoryId])
@@ -271,29 +278,33 @@ model OrderStatusHistory {
 }
 
 model Coupon {
-  id              String     @id @default(cuid())
-  code            String     @unique
-  type            CouponType
-  value           Decimal    @db.Decimal(10, 2)
-  minOrderAmount  Decimal?   @db.Decimal(10, 2)
-  maxUses         Int?
-  usedCount       Int        @default(0)
-  expiresAt       DateTime?
-  isActive        Boolean    @default(true)
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  id               String     @id @default(cuid())
+  code             String     @unique
+  type             CouponType
+  value            Decimal    @db.Decimal(10, 2)
+  minOrderValue    Decimal?   @db.Decimal(10, 2)
+  maxDiscountValue Decimal?   @db.Decimal(10, 2)
+  maxUses          Int?
+  usedCount        Int        @default(0)
+  expiresAt        DateTime?
+  isActive         Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
 
   @@index([code])
 }
 
 model PaymentMethod {
-  id          String            @id @default(cuid())
-  name        String
-  type        PaymentMethodType
-  isActive    Boolean           @default(true)
-  config      Json?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id           String            @id @default(cuid())
+  name         String
+  type         PaymentMethodType
+  isActive     Boolean           @default(true)
+  config       Json?
+  instructions String?
+  icon         String?
+  order        Int               @default(0)
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 }
 
 model SiteSettings {
@@ -302,15 +313,25 @@ model SiteSettings {
   storeDescription      String?
   storeEmail            String   @default("contato@sexshop.com")
   storePhone            String?
-  storeCnpj             String?
+  storeWhatsapp         String?
+  storeCNPJ             String?
   logoUrl               String?
   faviconUrl            String?
   freeShippingThreshold Decimal? @db.Decimal(10, 2)
   maintenanceMode       Boolean  @default(false)
+  maintenanceMessage    String?
   allowGuestCheckout    Boolean  @default(true)
   metaTitle             String?
   metaDescription       String?
   primaryColor          String?
+  secondaryColor        String?
+  socialLinks           Json?
+  footerText            String?
+  privacyPolicy         String?
+  termsOfService        String?
+  seoTitle              String?
+  seoDescription        String?
+  seoKeywords           String?
   updatedAt             DateTime @updatedAt
 }
 
@@ -337,7 +358,8 @@ model Banner {
 model Review {
   id         String   @id @default(cuid())
   productId  String
-  userId     String
+  userId     String?
+  guestName  String?
   rating     Int
   title      String?
   comment    String?
@@ -346,9 +368,8 @@ model Review {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([productId, userId])
   @@index([productId])
   @@index([userId])
   @@index([isApproved])
@@ -367,15 +388,16 @@ model Wishlist {
 }
 
 model ShippingZone {
-  id                    String   @id @default(cuid())
-  name                  String
-  states                String[]
-  price                 Decimal  @db.Decimal(10, 2)
-  deliveryDays          Int
-  freeShippingThreshold Decimal? @db.Decimal(10, 2)
-  isActive              Boolean  @default(true)
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String
+  states        String[]
+  price         Decimal  @db.Decimal(10, 2)
+  freeAbove     Decimal? @db.Decimal(10, 2)
+  estimatedDays String
+  deliveryDays  Int      @default(7)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model AuditLog {

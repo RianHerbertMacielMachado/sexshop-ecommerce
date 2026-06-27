@@ -7,12 +7,13 @@ import { z } from 'zod'
 export const createBannerSchema = z.object({
   title: z.string().min(1).max(200),
   subtitle: z.string().max(300).optional().nullable(),
-  link: z.string().url().optional().nullable(),
+  linkUrl: z.string().url().optional().nullable(),
+  linkText: z.string().max(100).optional().nullable(),
   position: z.nativeEnum(BannerPosition),
   isActive: z.boolean().default(true),
   order: z.number().int().min(0).default(0),
-  startDate: z.string().datetime().optional().nullable(),
-  endDate: z.string().datetime().optional().nullable(),
+  startsAt: z.string().datetime().optional().nullable(),
+  endsAt: z.string().datetime().optional().nullable(),
 })
 
 export type CreateBannerInput = z.infer<typeof createBannerSchema>
@@ -25,10 +26,10 @@ export class BannersService {
         position,
         isActive: true,
         OR: [
-          { startDate: null, endDate: null },
-          { startDate: { lte: now }, endDate: null },
-          { startDate: null, endDate: { gte: now } },
-          { startDate: { lte: now }, endDate: { gte: now } },
+          { startsAt: null, endsAt: null },
+          { startsAt: { lte: now }, endsAt: null },
+          { startsAt: null, endsAt: { gte: now } },
+          { startsAt: { lte: now }, endsAt: { gte: now } },
         ],
       },
       orderBy: { order: 'asc' },
@@ -54,12 +55,13 @@ export class BannersService {
         subtitle: input.subtitle ?? null,
         imageUrl: imageResult.url,
         mobileImageUrl,
-        link: input.link ?? null,
+        linkUrl: input.linkUrl ?? null,
+        linkText: input.linkText ?? null,
         position: input.position,
         isActive: input.isActive,
         order: input.order,
-        startDate: input.startDate ? new Date(input.startDate) : null,
-        endDate: input.endDate ? new Date(input.endDate) : null,
+        startsAt: input.startsAt ? new Date(input.startsAt) : null,
+        endsAt: input.endsAt ? new Date(input.endsAt) : null,
       },
     })
   }
@@ -72,17 +74,23 @@ export class BannersService {
     if (imageFile) {
       const result = await uploadBannerImage(imageFile.buffer)
       imageUrl = result.url
-      const oldPublicId = extractPublicId(banner.imageUrl)
+      const oldPublicId = extractPublicId(banner.imageUrl ?? '')
       if (oldPublicId) await deleteImage(oldPublicId).catch(() => {})
     }
 
     return prisma.banner.update({
       where: { id },
       data: {
-        ...input,
+        title: input.title,
+        subtitle: input.subtitle,
         imageUrl,
-        startDate: input.startDate ? new Date(input.startDate) : undefined,
-        endDate: input.endDate ? new Date(input.endDate) : undefined,
+        linkUrl: input.linkUrl,
+        linkText: input.linkText,
+        position: input.position,
+        isActive: input.isActive,
+        order: input.order,
+        startsAt: input.startsAt ? new Date(input.startsAt) : undefined,
+        endsAt: input.endsAt ? new Date(input.endsAt) : undefined,
       },
     })
   }
@@ -90,7 +98,7 @@ export class BannersService {
   async delete(id: string): Promise<void> {
     const banner = await prisma.banner.findUnique({ where: { id } })
     if (!banner) throw new NotFoundError('Banner')
-    const publicId = extractPublicId(banner.imageUrl)
+    const publicId = extractPublicId(banner.imageUrl ?? '')
     if (publicId) await deleteImage(publicId).catch(() => {})
     await prisma.banner.delete({ where: { id } })
   }

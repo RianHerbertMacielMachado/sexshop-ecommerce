@@ -23,6 +23,10 @@ function getTransporter(): Transporter {
 }
 
 export async function verifyMailConnection(): Promise<void> {
+  if (!env.SMTP_HOST || !env.SMTP_USER) {
+    logger.warn('⚠️ SMTP não configurado — emails desativados')
+    return
+  }
   try {
     await getTransporter().verify()
     logger.info('✅ Conexão SMTP verificada com sucesso')

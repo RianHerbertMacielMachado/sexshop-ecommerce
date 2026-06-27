@@ -1,5 +1,3 @@
-# Na raiz do projeto
-cat > .gitignore << 'EOF'
 # Dependencies
 node_modules/
 .pnp
@@ -21,9 +19,11 @@ out/
 logs/
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Prisma
-prisma/migrations/
+# Prisma state (não ignorar migrations)
+.prisma/
 
 # OS files
 .DS_Store
@@ -32,10 +32,20 @@ Thumbs.db
 # IDE
 .vscode/settings.json
 .idea/
+*.swp
+*.swo
 
 # Testing
 coverage/
 
 # Turbo
 .turbo/
-EOF
+
+# PM2
+.pm2/
+pids/
+
+# Backup files
+*.backup
+*.bak
+*.tar.gz

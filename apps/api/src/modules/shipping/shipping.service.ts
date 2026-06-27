@@ -9,6 +9,7 @@ export const createShippingZoneSchema = z.object({
   price: z.number().min(0),
   freeAbove: z.number().positive().optional().nullable(),
   estimatedDays: z.string().min(2).max(50),
+  deliveryDays: z.number().int().positive().optional().default(7),
   isActive: z.boolean().default(true),
 })
 
@@ -100,6 +101,7 @@ export class ShippingService {
         price: input.price,
         freeAbove: input.freeAbove ?? null,
         estimatedDays: input.estimatedDays,
+        deliveryDays: input.deliveryDays ?? 7,
         isActive: input.isActive,
       },
     })

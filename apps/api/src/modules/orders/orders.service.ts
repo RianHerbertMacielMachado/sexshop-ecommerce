@@ -201,7 +201,7 @@ export class OrdersService {
 
     if (!order) throw new NotFoundError('Pedido')
 
-    const customerEmail = order.guestEmail ?? order.user?.email
+    const customerEmail = order.guestEmail ?? (await prisma.user.findUnique({ where: { id: order.userId ?? "" }, select: { email: true } }))?.email ?? null
     if (!customerEmail) throw new AppError('Pedido não encontrado para este e-mail', 404)
 
     const emailMatches =
@@ -296,7 +296,7 @@ export class OrdersService {
 
     await prisma.order.update({ where: { id }, data: updateData })
 
-    const customerEmail = order.guestEmail ?? order.user?.email
+    const customerEmail = order.guestEmail ?? (await prisma.user.findUnique({ where: { id: order.userId ?? "" }, select: { email: true } }))?.email ?? null
     const customerName = order.guestName ?? order.user?.name ?? 'Cliente'
 
     if (customerEmail) {
@@ -334,11 +334,12 @@ export class OrdersService {
       await tx.order.update({
         where: { id: orderId },
         data: {
-          status: 'PAID',
+          status: 'CONFIRMED',
           paymentStatus: 'PAID',
           paidAt: new Date(),
-          ...paymentData,
-          statusHistory: { create: { status: 'PAID', comment: 'Pagamento confirmado automaticamente' } },
+          stripeSessionId: paymentData.stripeSessionId ?? undefined,
+          mpPaymentId: paymentData.mpPaymentId ?? undefined,
+          statusHistory: { create: { status: 'CONFIRMED', comment: 'Pagamento confirmado automaticamente' } },
         },
       })
 
@@ -358,7 +359,7 @@ export class OrdersService {
       }
     })
 
-    const customerEmail = order.guestEmail ?? order.user?.email
+    const customerEmail = order.guestEmail ?? (await prisma.user.findUnique({ where: { id: order.userId ?? "" }, select: { email: true } }))?.email ?? null
     const customerName = order.guestName ?? order.user?.name ?? 'Cliente'
 
     if (customerEmail && order.shippingAddress) {
@@ -373,11 +374,19 @@ export class OrdersService {
           variantName: item.variantName ?? undefined,
         })),
         subtotal: Number(order.subtotal),
-        discount: Number(order.discount),
+        discount: Number(order.discountAmount),
         shippingCost: Number(order.shippingCost),
         total: Number(order.total),
-        paymentMethod: order.paymentMethod,
-        shippingAddress: order.shippingAddress,
+        paymentMethod: order.paymentMethod ?? '',
+        shippingAddress: {
+          street: order.shippingAddress.street,
+          number: order.shippingAddress.number,
+          complement: order.shippingAddress.complement ?? undefined,
+          neighborhood: order.shippingAddress.neighborhood,
+          city: order.shippingAddress.city,
+          state: order.shippingAddress.state,
+          zipCode: order.shippingAddress.zipCode,
+        },
         isDiscreetPackaging: order.isDiscreetPackaging,
       }, settings?.storeName ?? undefined).catch((err: Error) =>
         logger.error('Falha ao enviar e-mail de confirmação:', err)

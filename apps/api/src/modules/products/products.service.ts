@@ -8,7 +8,6 @@ import type {
   UpdateProductInput,
   ListProductsQuery,
   CreateVariantInput,
-  UpdateVariantInput,
 } from './products.schema'
 
 function generateSlug(name: string): string {
@@ -41,15 +40,15 @@ export class ProductsService {
       minPrice,
       maxPrice,
       sortBy,
-      featured,
+      isFeatured,
       inStock,
-      isActive,
+      admin,
     } = query
 
     const skip = (page - 1) * limit
 
     const where: Prisma.ProductWhereInput = {
-      isActive: isActive !== undefined ? isActive : true,
+      isActive: admin ? undefined : true,
     }
 
     if (search) {
@@ -78,17 +77,16 @@ export class ProductsService {
       if (maxPrice !== undefined) where.price.lte = maxPrice
     }
 
-    if (featured) where.isFeatured = true
+    if (isFeatured) where.isFeatured = true
     if (inStock) where.stock = { gt: 0 }
 
     const orderBy: Prisma.ProductOrderByWithRelationInput = (() => {
       switch (sortBy) {
-        case 'price_asc': return { price: 'asc' }
-        case 'price_desc': return { price: 'desc' }
-        case 'popular': return { soldCount: 'desc' }
-        case 'rating': return { averageRating: 'desc' }
+        case 'price_asc': return { price: 'asc' as const }
+        case 'price_desc': return { price: 'desc' as const }
+        case 'popular': return { soldCount: 'desc' as const }
         case 'newest':
-        default: return { createdAt: 'desc' }
+        default: return { createdAt: 'desc' as const }
       }
     })()
 
@@ -104,7 +102,7 @@ export class ProductsService {
           slug: true,
           shortDescription: true,
           price: true,
-          comparePrice: true,
+          compareAtPrice: true,
           images: true,
           stock: true,
           isFeatured: true,
@@ -178,7 +176,7 @@ export class ProductsService {
         name: true,
         slug: true,
         price: true,
-        comparePrice: true,
+        compareAtPrice: true,
         images: true,
         stock: true,
         averageRating: true,
@@ -211,7 +209,7 @@ export class ProductsService {
         name: true,
         slug: true,
         price: true,
-        comparePrice: true,
+        compareAtPrice: true,
         images: true,
         stock: true,
         averageRating: true,
@@ -232,7 +230,7 @@ export class ProductsService {
         name: true,
         slug: true,
         price: true,
-        comparePrice: true,
+        compareAtPrice: true,
         images: true,
         stock: true,
         averageRating: true,
@@ -259,19 +257,17 @@ export class ProductsService {
       data: {
         name: input.name,
         slug,
-        description: input.description,
-        shortDescription: input.shortDescription ?? null,
+        description: input.description ?? null,
         price: input.price,
-        comparePrice: input.comparePrice ?? null,
-        costPrice: input.costPrice ?? null,
+        compareAtPrice: input.compareAtPrice ?? null,
         sku: input.sku,
-        stock: input.stock,
+        stock: input.stock ?? 0,
         weight: input.weight ?? null,
         images: [],
         categoryId: input.categoryId,
-        isActive: input.isActive,
-        isFeatured: input.isFeatured,
-        isDiscreet: input.isDiscreet,
+        isActive: input.isActive ?? true,
+        isFeatured: input.isFeatured ?? false,
+        isDiscreet: input.isDiscreet ?? false,
         metaTitle: input.metaTitle ?? null,
         metaDescription: input.metaDescription ?? null,
         tags: input.tags ?? [],
@@ -294,17 +290,28 @@ export class ProductsService {
 
     let slug: string | undefined
     if (input.name) {
-      const baseSlug = input.slug ?? generateSlug(input.name)
+      const baseSlug = generateSlug(input.name)
       slug = await ensureUniqueSlug(baseSlug, id)
-    } else if (input.slug) {
-      slug = await ensureUniqueSlug(input.slug, id)
     }
 
     return prisma.product.update({
       where: { id },
       data: {
-        ...input,
+        name: input.name,
         slug,
+        description: input.description,
+        price: input.price,
+        compareAtPrice: input.compareAtPrice,
+        sku: input.sku,
+        stock: input.stock,
+        weight: input.weight,
+        categoryId: input.categoryId,
+        isActive: input.isActive,
+        isFeatured: input.isFeatured,
+        isDiscreet: input.isDiscreet,
+        metaTitle: input.metaTitle,
+        metaDescription: input.metaDescription,
+        tags: input.tags,
         updatedAt: new Date(),
       },
       include: {
@@ -379,17 +386,16 @@ export class ProductsService {
       data: {
         productId,
         name: input.name,
-        options: input.options,
+        value: input.value,
         price: input.price ?? null,
-        stock: input.stock,
+        stock: input.stock ?? 0,
         sku: input.sku ?? null,
-        imageUrl: input.imageUrl ?? null,
-        isActive: input.isActive,
+        isActive: input.isActive ?? true,
       },
     })
   }
 
-  async updateVariant(productId: string, variantId: string, input: UpdateVariantInput) {
+  async updateVariant(productId: string, variantId: string, input: Partial<CreateVariantInput>) {
     const variant = await prisma.productVariant.findFirst({
       where: { id: variantId, productId },
     })
