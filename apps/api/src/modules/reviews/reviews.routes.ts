@@ -20,7 +20,8 @@ router.post('/products/:productId/reviews', optionalAuth, asyncHandler(async (re
 }))
 
 // Rota pública: retorna reviews aprovadas para exibição na homepage
-router.get('/reviews/featured', asyncHandler(async (req, res) => {
+// Montada em /api/reviews → path interno: /featured → URL final: /api/reviews/featured
+router.get('/featured', asyncHandler(async (req, res) => {
   const limit = parseInt(req.query.limit as string || '10', 10)
   const result = await reviewsService.listAll({
     page: 1,

@@ -3,6 +3,10 @@ const nextConfig = {
   output: 'standalone',
 
   images: {
+    // Permite SVG externo (necessário para placehold.co que gera SVGs dinâmicos)
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: 'https',
