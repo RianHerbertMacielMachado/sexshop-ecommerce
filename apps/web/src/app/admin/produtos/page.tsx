@@ -115,14 +115,14 @@ export default function AdminProductsPage() {
                     ))}
                   </tr>
                 ))
-              ) : data?.products.length === 0 ? (
+              ) : (data?.products?.length ?? 0) === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12 text-muted-foreground">
                     Nenhum produto encontrado.
                   </td>
                 </tr>
               ) : (
-                data?.products.map((product) => (
+                data?.products?.map((product) => (
                   <tr key={product.id} className="border-b hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
