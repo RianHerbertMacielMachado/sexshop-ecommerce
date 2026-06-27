@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
@@ -13,7 +13,7 @@ import { formatCurrency, formatDateTime } from '@/lib/utils'
 import { useCartStore } from '@/stores/cartStore'
 import type { Order } from '@/types'
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams()
   const orderId = searchParams.get('orderId') ?? ''
   const { clearCart } = useCartStore()
@@ -113,5 +113,20 @@ export default function SuccessPage() {
       </main>
       <Footer />
     </>
+  )
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-full bg-zinc-200 animate-pulse mx-auto mb-4" />
+          <p className="text-zinc-400">Carregando...</p>
+        </div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { Suspense, useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { SlidersHorizontal, X, ChevronDown } from 'lucide-react'
@@ -22,7 +22,7 @@ const SORT_OPTIONS = [
   { value: 'rating', label: 'Melhor Avaliados' },
 ]
 
-export default function ProductsPage() {
+function ProductsContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
 
@@ -274,5 +274,29 @@ export default function ProductsPage() {
       </main>
       <Footer />
     </>
+  )
+}
+
+export default function ProductsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-zinc-50">
+        <div className="bg-white border-b border-zinc-100 py-8">
+          <div className="container mx-auto px-4">
+            <div className="h-8 w-32 bg-zinc-200 animate-pulse rounded-lg mb-2" />
+            <div className="h-4 w-48 bg-zinc-100 animate-pulse rounded" />
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="aspect-[3/4] rounded-2xl bg-zinc-200 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    }>
+      <ProductsContent />
+    </Suspense>
   )
 }

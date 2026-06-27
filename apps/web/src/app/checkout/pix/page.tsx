@@ -1,19 +1,17 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { Suspense, useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Copy, Check, Clock, QrCode, ArrowRight } from 'lucide-react'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { Copy, Check, Clock, QrCode } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import { api } from '@/lib/api'
-import { formatCurrency } from '@/lib/utils'
 import { useCartStore } from '@/stores/cartStore'
 import toast from 'react-hot-toast'
 
-export default function PixPage() {
+function PixContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const orderId = searchParams.get('orderId') ?? ''
@@ -200,5 +198,20 @@ export default function PixPage() {
       </main>
       <Footer />
     </>
+  )
+}
+
+export default function PixPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 rounded-2xl bg-zinc-200 animate-pulse mx-auto mb-4" />
+          <p className="text-zinc-400">Carregando PIX...</p>
+        </div>
+      </div>
+    }>
+      <PixContent />
+    </Suspense>
   )
 }

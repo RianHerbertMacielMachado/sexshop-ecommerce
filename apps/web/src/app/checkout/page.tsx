@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Check, ChevronRight, Lock } from 'lucide-react'
+import { Check, Lock } from 'lucide-react'
 import { useMutation } from '@tanstack/react-query'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
@@ -48,6 +48,12 @@ export default function CheckoutPage() {
   const subtotal = getSubtotal()
   const total = getTotal()
 
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push('/carrinho')
+    }
+  }, [items.length, router])
+
   const { mutate: createOrder, isPending } = useMutation({
     mutationFn: async (data: CheckoutFormData) => {
       const payload = {
@@ -87,7 +93,6 @@ export default function CheckoutPage() {
   }
 
   if (items.length === 0) {
-    router.push('/carrinho')
     return null
   }
 
