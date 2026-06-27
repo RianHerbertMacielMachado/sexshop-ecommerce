@@ -30,8 +30,13 @@ interface Props {
 }
 
 export default function CheckoutAddress({ defaultValues, subtotal, onComplete, onBack }: Props) {
-  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([])
-  const [selectedZone, setSelectedZone] = useState<string>('')
+  // Restaura opções de frete do estado do pai (sobrevive à remontagem)
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>(
+    (defaultValues.shippingOptions as ShippingOption[]) ?? []
+  )
+  const [selectedZone, setSelectedZone] = useState<string>(
+    (defaultValues.shippingZoneId as string) ?? ''
+  )
 
   const { register, handleSubmit, setValue, formState: { errors }, watch } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -79,11 +84,16 @@ export default function CheckoutAddress({ defaultValues, subtotal, onComplete, o
   }
 
   const onSubmit = (data: FormData) => {
+    if (shippingOptions.length > 0 && !selectedZone) {
+      return // Aguarda o usuário selecionar uma opção
+    }
     const selectedOption = shippingOptions.find((o) => o.zoneId === selectedZone)
     onComplete({
       address: data,
       shippingZoneId: selectedZone,
       shippingCost: selectedOption?.price ?? 0,
+      // Persiste as opções no estado do pai para restaurar ao voltar
+      shippingOptions,
     })
   }
 

@@ -15,6 +15,8 @@ import CheckoutIdentification from '@/components/checkout/CheckoutIdentification
 import CheckoutAddress from '@/components/checkout/CheckoutAddress'
 import CheckoutPayment from '@/components/checkout/CheckoutPayment'
 
+import type { ShippingOption } from '@/types'
+
 export type CheckoutFormData = {
   name: string
   email: string
@@ -32,6 +34,7 @@ export type CheckoutFormData = {
   }
   shippingZoneId: string
   shippingCost: number
+  shippingOptions?: ShippingOption[]   // persiste ao navegar entre steps
   paymentMethod: string
   isDiscreetPackaging: boolean
 }
@@ -41,12 +44,13 @@ const STEPS = ['Identificação', 'Endereço', 'Pagamento']
 export default function CheckoutPage() {
   const router = useRouter()
   const { user, isAuthenticated } = useAuthStore()
-  const { items, getSubtotal, getTotal, couponCode, couponDiscount, clearCart } = useCartStore()
+  const { items, getSubtotal, couponCode, couponDiscount, clearCart, setShipping } = useCartStore()
   const [step, setStep] = useState(0)
   const [formData, setFormData] = useState<Partial<CheckoutFormData>>({})
 
   const subtotal = getSubtotal()
-  const total = getTotal()
+  const shippingCost = formData.shippingCost ?? 0
+  const displayTotal = Math.max(0, subtotal - couponDiscount + shippingCost)
 
   useEffect(() => {
     if (items.length === 0) {
@@ -85,6 +89,12 @@ export default function CheckoutPage() {
   const handleStepComplete = (data: Partial<CheckoutFormData>) => {
     const updated = { ...formData, ...data }
     setFormData(updated)
+
+    // Sincroniza o frete no cartStore para que o total seja calculado corretamente
+    if (data.shippingZoneId !== undefined && data.shippingCost !== undefined) {
+      setShipping(data.shippingZoneId, data.shippingCost)
+    }
+
     if (step < STEPS.length - 1) {
       setStep(step + 1)
     } else {
@@ -183,15 +193,15 @@ export default function CheckoutPage() {
                       <span>Desconto</span><span>- {formatCurrency(couponDiscount)}</span>
                     </div>
                   )}
-                  {formData.shippingCost !== undefined && (
+                  {step >= 1 && formData.shippingZoneId && (
                     <div className="flex justify-between text-zinc-600">
                       <span>Frete</span>
-                      <span>{formData.shippingCost === 0 ? 'Grátis' : formatCurrency(formData.shippingCost)}</span>
+                      <span>{shippingCost === 0 ? 'Grátis' : formatCurrency(shippingCost)}</span>
                     </div>
                   )}
                   <div className="flex justify-between font-bold text-zinc-900 text-base pt-2 border-t border-zinc-100">
                     <span>Total</span>
-                    <span className="text-violet-600">{formatCurrency(total)}</span>
+                    <span className="text-violet-600">{formatCurrency(displayTotal)}</span>
                   </div>
                 </div>
               </div>

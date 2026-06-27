@@ -149,12 +149,58 @@ app.use(notFoundHandler)
 app.use(errorHandler)
 
 // ============================================================
+// SEED DE DADOS PADRÃO (idempotente — só insere se estiver vazio)
+// ============================================================
+async function seedDefaultData(): Promise<void> {
+  try {
+    const { prisma } = await import('./lib/prisma')
+    const { PaymentMethodType } = await import('@prisma/client')
+
+    // Métodos de pagamento
+    const existingMethods = await prisma.paymentMethod.count()
+    if (existingMethods === 0) {
+      await prisma.paymentMethod.createMany({
+        data: [
+          {
+            name: 'Cartão de Crédito / Débito',
+            type: PaymentMethodType.STRIPE_CARD,
+            isActive: true,
+            order: 1,
+            instructions: 'Pagamento seguro via Stripe. Parcelamento disponível.',
+          },
+          {
+            name: 'PIX',
+            type: PaymentMethodType.PIX,
+            isActive: true,
+            order: 2,
+            instructions: 'Pagamento instantâneo via PIX. QR Code gerado automaticamente.',
+          },
+        ],
+      })
+      logger.info('✅ Métodos de pagamento padrão criados (PIX + Cartão)')
+    }
+
+    // Configurações da loja
+    const existingSettings = await prisma.siteSettings.count()
+    if (existingSettings === 0) {
+      await prisma.siteSettings.create({
+        data: { id: 'singleton', storeName: 'Minha Loja' },
+      })
+      logger.info('✅ Configurações padrão da loja criadas')
+    }
+  } catch (err) {
+    logger.error('⚠️ Erro ao semear dados padrão (não crítico):', err)
+  }
+}
+
+// ============================================================
 // INICIALIZAÇÃO DO SERVIDOR
 // ============================================================
 async function bootstrap(): Promise<void> {
   try {
     await connectDatabase()
     await verifyMailConnection()
+    await seedDefaultData()
 
     const server = app.listen(env.PORT, () => {
       logger.info(`🚀 API rodando na porta ${env.PORT}`)
