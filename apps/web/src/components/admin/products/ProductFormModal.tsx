@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { Product, Category } from '@/types'
+import ImageUploader from '@/components/admin/products/ImageUploader'
 
 const productSchema = z.object({
   name: z.string().min(2, 'Nome obrigatório'),
@@ -48,6 +49,7 @@ interface Props {
 export default function ProductFormModal({ isOpen, onClose, product }: Props) {
   const queryClient = useQueryClient()
   const isEditing = !!product
+  const [images, setImages] = useState<string[]>([])
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories-flat'],
@@ -84,8 +86,10 @@ export default function ProductFormModal({ isOpen, onClose, product }: Props) {
           weight: product.weight ?? undefined,
           tags: product.tags?.join(', ') ?? '',
         })
+        setImages(product.images ?? [])
       } else {
         reset({ isActive: true, isFeatured: false, isDiscreet: false, stock: 0, price: 0 })
+        setImages([])
       }
     }
   }, [isOpen, product, reset])
@@ -94,6 +98,7 @@ export default function ProductFormModal({ isOpen, onClose, product }: Props) {
     mutationFn: (data: ProductFormData) => {
       const payload = {
         ...data,
+        images,
         tags: data.tags ? data.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
       }
       return isEditing
@@ -213,6 +218,12 @@ export default function ProductFormModal({ isOpen, onClose, product }: Props) {
                 onCheckedChange={(v) => setValue('isDiscreet', v)}
               />
             </div>
+          </div>
+
+          {/* Imagens */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">Imagens</label>
+            <ImageUploader images={images} onChange={setImages} maxImages={10} />
           </div>
 
           <div className="flex gap-3 pt-2">

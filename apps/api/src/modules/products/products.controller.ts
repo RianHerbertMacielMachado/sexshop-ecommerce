@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import { productsService } from './products.service'
 import { asyncHandler } from '../../middleware/error.middleware'
 import { validate } from '../../lib/validate'
+import { uploadProductImage } from '../../lib/cloudinary'
 import {
   createProductSchema,
   updateProductSchema,
@@ -51,6 +52,18 @@ export const updateProduct = asyncHandler(async (req: Request, res: Response) =>
 export const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
   await productsService.delete(req.params.id)
   res.json({ success: true, message: 'Produto removido com sucesso' })
+})
+
+export const uploadTempImages = asyncHandler(async (req: Request, res: Response) => {
+  const files = req.files as Express.Multer.File[]
+  if (!files?.length) {
+    res.status(400).json({ success: false, message: 'Nenhuma imagem enviada' })
+    return
+  }
+  // Faz upload de todas as imagens em paralelo para o Cloudinary (pasta products)
+  const results = await Promise.all(files.map((f) => uploadProductImage(f.buffer)))
+  const urls = results.map((r) => r.secureUrl)
+  res.json({ success: true, message: 'Imagens enviadas com sucesso', data: { urls } })
 })
 
 export const uploadProductImages = asyncHandler(async (req: Request, res: Response) => {

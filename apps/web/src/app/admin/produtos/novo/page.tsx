@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -12,7 +12,6 @@ import {
   ArrowLeft,
   Loader2,
   Plus,
-  X,
   ImageIcon,
   Package,
   Tag,
@@ -32,6 +31,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import type { Category } from '@/types'
+import ImageUploader from '@/components/admin/products/ImageUploader'
 
 // ── Schema ─────────────────────────────────────────────────────────────────────
 const productSchema = z.object({
@@ -62,8 +62,6 @@ export default function AdminNewProductPage() {
 
   // Image URLs state (managed separately — not part of react-hook-form)
   const [images, setImages] = useState<string[]>([])
-  // useRef evita que re-renders do react-hook-form resetem o valor do input
-  const imageInputRef = useRef<HTMLInputElement>(null)
   const [showSeo, setShowSeo] = useState(false)
 
   // Fetch categories for the select
@@ -119,32 +117,6 @@ export default function AdminNewProductPage() {
     },
   })
 
-  // ── Image helpers ──────────────────────────────────────────────────────────
-  const addImage = () => {
-    const url = imageInputRef.current?.value.trim() ?? ''
-    if (!url) {
-      toast.error('Cole uma URL de imagem antes de adicionar.')
-      return
-    }
-    if (images.includes(url)) {
-      toast.error('URL já adicionada.')
-      return
-    }
-    setImages((prev) => [...prev, url])
-    // Limpa o input diretamente via ref (sem causar re-render do formulário)
-    if (imageInputRef.current) imageInputRef.current.value = ''
-  }
-
-  const removeImage = (url: string) => {
-    setImages((prev) => prev.filter((u) => u !== url))
-  }
-
-  const handleImageKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      addImage()
-    }
-  }
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
@@ -359,59 +331,7 @@ export default function AdminNewProductPage() {
             Imagens
           </h2>
 
-          <div className="space-y-3">
-            <div className="flex gap-2">
-              <Input
-                ref={imageInputRef}
-                onKeyDown={handleImageKeyDown}
-                placeholder="Cole a URL da imagem e pressione Enter ou clique em Adicionar"
-                className="flex-1"
-              />
-              <Button type="button" variant="outline" onClick={addImage} className="shrink-0">
-                <Plus className="h-4 w-4 mr-1" />
-                Adicionar
-              </Button>
-            </div>
-
-            {images.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {images.map((url, idx) => (
-                  <div
-                    key={url}
-                    className="relative group aspect-square rounded-lg overflow-hidden border bg-muted"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={url}
-                      alt={`Imagem ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        ;(e.target as HTMLImageElement).src = '/placeholder.svg'
-                      }}
-                    />
-                    {idx === 0 && (
-                      <span className="absolute top-1 left-1 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded font-medium">
-                        Principal
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => removeImage(url)}
-                      className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
-                <ImageIcon className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">Nenhuma imagem adicionada.</p>
-                <p className="text-xs mt-1">A primeira imagem será usada como capa do produto.</p>
-              </div>
-            )}
-          </div>
+          <ImageUploader images={images} onChange={setImages} maxImages={10} />
         </section>
 
         {/* ── Tags & Configurações ───────────────────────────────────────── */}

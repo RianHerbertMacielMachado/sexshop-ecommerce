@@ -22,6 +22,15 @@ router.post(
   auditLog({ entity: 'Product' }),
   controller.createProduct
 )
+// Upload temporário de imagens (antes de criar o produto — retorna URLs do Cloudinary)
+router.post(
+  '/upload-temp',
+  authMiddleware,
+  isAdmin,
+  uploadRateLimiter,
+  uploadMultiple,
+  controller.uploadTempImages
+)
 router.put(
   '/:id',
   authMiddleware,
