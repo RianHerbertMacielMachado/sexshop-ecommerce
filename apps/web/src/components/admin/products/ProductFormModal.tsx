@@ -53,7 +53,7 @@ export default function ProductFormModal({ isOpen, onClose, product }: Props) {
     queryKey: ['categories-flat'],
     queryFn: async () => {
       const res = await api.get('/categories')
-      return res.data.data as Category[]
+      return res.data.data.categories as Category[]
     },
     enabled: isOpen,
   })

@@ -101,7 +101,7 @@ export default function AdminCategoriesPage() {
     queryKey: ['admin-categories'],
     queryFn: async () => {
       const res = await api.get('/categories?tree=true')
-      return res.data.data as (Category & { children?: Category[] })[]
+      return res.data.data.categories as (Category & { children?: Category[] })[]
     },
   })
 

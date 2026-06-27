@@ -70,7 +70,7 @@ export default function AdminNewProductPage() {
     queryKey: ['categories-flat'],
     queryFn: async () => {
       const res = await api.get('/categories')
-      return res.data.data as Category[]
+      return res.data.data.categories as Category[]
     },
   })
 
