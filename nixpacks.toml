@@ -10,4 +10,4 @@ cmds = ["npm ci"]
 cmds = ["npm run build --workspace=apps/web"]
 
 [start]
-cmd = "npm run start --workspace=apps/web"
+cmd = "node apps/web/server.js"

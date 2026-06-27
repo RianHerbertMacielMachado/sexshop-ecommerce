@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
-    "start": "npm run start --workspace=apps/web",
+    "start": "node apps/web/server.js",
     "start:web": "npm run start --workspace=apps/web",
     "start:api": "npm run start --workspace=apps/api",
     "lint": "turbo run lint",
