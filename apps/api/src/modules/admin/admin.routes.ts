@@ -94,6 +94,66 @@ router.get('/reports/products', asyncHandler(async (_req, res) => {
   res.json({ success: true, message: 'Relatório de produtos', data })
 }))
 
+// Payments history (derived from orders)
+router.get('/payments', asyncHandler(async (req, res) => {
+  const page = parseInt(req.query.page as string || '1', 10)
+  const limit = parseInt(req.query.limit as string || '15', 10)
+  const search = req.query.search as string | undefined
+
+  const { prisma } = await import('../../lib/prisma')
+
+  const where = search
+    ? {
+        OR: [
+          { orderNumber: { contains: search, mode: 'insensitive' as const } },
+          { user: { name: { contains: search, mode: 'insensitive' as const } } },
+          { user: { email: { contains: search, mode: 'insensitive' as const } } },
+          { guestName: { contains: search, mode: 'insensitive' as const } },
+          { guestEmail: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }
+    : {}
+
+  const [orders, total] = await Promise.all([
+    prisma.order.findMany({
+      where,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        orderNumber: true,
+        paymentStatus: true,
+        paymentMethod: true,
+        total: true,
+        createdAt: true,
+        user: { select: { name: true, email: true } },
+        guestName: true,
+        guestEmail: true,
+      },
+    }),
+    prisma.order.count({ where }),
+  ])
+
+  const payments = orders.map((o) => ({
+    id: o.id,
+    orderId: o.id,
+    orderNumber: o.orderNumber,
+    method: (o.paymentMethod as string)?.includes('PIX') ? 'PIX' : 'STRIPE',
+    amount: Number(o.total),
+    status: o.paymentStatus,
+    createdAt: o.createdAt.toISOString(),
+    customerName: o.user?.name ?? o.guestName ?? 'Convidado',
+    customerEmail: o.user?.email ?? o.guestEmail ?? '',
+  }))
+
+  res.json({
+    success: true,
+    message: 'Pagamentos listados',
+    data: { payments, total, pages: Math.ceil(total / limit), page },
+  })
+}))
+
 // Payment Methods
 router.get('/payment-methods', asyncHandler(async (_req, res) => {
   const methods = await adminService.getPaymentMethods()

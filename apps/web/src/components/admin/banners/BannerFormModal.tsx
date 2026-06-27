@@ -105,10 +105,10 @@ export default function BannerFormModal({ isOpen, onClose, banner }: Props) {
         formData.append('image', fileRef.current.files[0])
       }
       return isEditing
-        ? api.put(`/banners/${banner!.id}`, formData, {
+        ? api.put(`/banners/admin/${banner!.id}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           })
-        : api.post('/banners', formData, {
+        : api.post('/banners/admin', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
           })
     },
@@ -198,7 +198,7 @@ export default function BannerFormModal({ isOpen, onClose, banner }: Props) {
           <div className="space-y-1">
             <Label>Posição *</Label>
             <Select
-              value={watch('position')}
+              value={watch('position') || 'HOME_HERO'}
               onValueChange={(v) =>
                 setValue('position', v as BannerPositionType)
               }

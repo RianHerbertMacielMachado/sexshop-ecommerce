@@ -94,14 +94,14 @@ export default function AdminPaymentsPage() {
                     ))}
                   </tr>
                 ))
-              ) : data?.payments.length === 0 ? (
+              ) : (data?.payments?.length ?? 0) === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12 text-muted-foreground">
                     Nenhum pagamento encontrado.
                   </td>
                 </tr>
               ) : (
-                data?.payments.map((payment) => (
+                data?.payments?.map((payment) => (
                   <tr key={payment.id} className="border-b hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-3 text-sm font-medium">#{payment.orderNumber}</td>
                     <td className="px-4 py-3">

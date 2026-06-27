@@ -18,13 +18,13 @@ export default function AdminShippingPage() {
   const { data: zones = [], isLoading } = useQuery({
     queryKey: ['admin-shipping-zones'],
     queryFn: async () => {
-      const res = await api.get('/shipping/zones')
-      return res.data.data as ShippingZone[]
+      const res = await api.get('/shipping/admin/zones')
+      return res.data.data?.zones as ShippingZone[]
     },
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/shipping/zones/${id}`),
+    mutationFn: (id: string) => api.delete(`/shipping/admin/zones/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-shipping-zones'] })
       toast.success('Zona removida.')

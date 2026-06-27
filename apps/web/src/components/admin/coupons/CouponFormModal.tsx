@@ -66,8 +66,8 @@ export default function CouponFormModal({ isOpen, onClose, coupon }: Props) {
   const mutation = useMutation({
     mutationFn: (data: CouponFormData) =>
       isEditing
-        ? api.put(`/coupons/${coupon!.id}`, data)
-        : api.post('/coupons', data),
+        ? api.put(`/coupons/admin/${coupon!.id}`, data)
+        : api.post('/coupons/admin', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-coupons'] })
       toast.success(isEditing ? 'Cupom atualizado!' : 'Cupom criado!')
@@ -102,7 +102,7 @@ export default function CouponFormModal({ isOpen, onClose, coupon }: Props) {
           <div className="space-y-1">
             <Label>Tipo *</Label>
             <Select
-              value={watch('type')}
+              value={watch('type') || 'PERCENTAGE'}
               onValueChange={(v) => setValue('type', v as CouponFormData['type'])}
             >
               <SelectTrigger>

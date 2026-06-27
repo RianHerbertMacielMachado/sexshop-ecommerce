@@ -18,13 +18,13 @@ export default function AdminBannersPage() {
   const { data: banners = [], isLoading } = useQuery({
     queryKey: ['admin-banners'],
     queryFn: async () => {
-      const res = await api.get('/banners/all')
-      return res.data.data as Banner[]
+      const res = await api.get('/banners/admin')
+      return res.data.data?.banners as Banner[]
     },
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/banners/${id}`),
+    mutationFn: (id: string) => api.delete(`/banners/admin/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-banners'] })
       toast.success('Banner removido.')
@@ -34,7 +34,7 @@ export default function AdminBannersPage() {
 
   const toggleMutation = useMutation({
     mutationFn: (banner: Banner) =>
-      api.put(`/banners/${banner.id}`, { isActive: !banner.isActive }),
+      api.put(`/banners/admin/${banner.id}`, { isActive: !banner.isActive }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-banners'] })
       toast.success('Status atualizado.')

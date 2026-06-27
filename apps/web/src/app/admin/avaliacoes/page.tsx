@@ -27,7 +27,7 @@ export default function AdminReviewsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-reviews', page, search, filter],
     queryFn: async () => {
-      const res = await api.get('/admin/reviews', {
+      const res = await api.get('/reviews/admin/reviews', {
         params: {
           page,
           limit: 15,
@@ -41,7 +41,9 @@ export default function AdminReviewsPage() {
 
   const approveMutation = useMutation({
     mutationFn: ({ id, approve }: { id: string; approve: boolean }) =>
-      api.patch(`/products/reviews/${id}/approve`, { isApproved: approve }),
+      approve
+        ? api.patch(`/reviews/admin/reviews/${id}/approve`)
+        : api.patch(`/reviews/admin/reviews/${id}/reject`),
     onSuccess: (_, { approve }) => {
       queryClient.invalidateQueries({ queryKey: ['admin-reviews'] })
       toast.success(approve ? 'Avaliação aprovada.' : 'Avaliação rejeitada.')
@@ -95,13 +97,13 @@ export default function AdminReviewsPage() {
                 <div className="h-3 bg-muted rounded animate-pulse w-2/3" />
               </div>
             ))
-          ) : data?.reviews.length === 0 ? (
+          ) : (data?.reviews?.length ?? 0) === 0 ? (
             <div className="text-center py-12">
               <MessageSquare className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
               <p className="text-muted-foreground">Nenhuma avaliação encontrada.</p>
             </div>
           ) : (
-            data?.reviews.map((review) => (
+            data?.reviews?.map((review) => (
               <div key={review.id} className="p-4">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">

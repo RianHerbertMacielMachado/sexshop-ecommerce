@@ -33,7 +33,7 @@ export default function AdminOrdersPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-orders', page, search, statusFilter],
     queryFn: async () => {
-      const res = await api.get('/orders/admin/all', {
+      const res = await api.get('/admin/orders', {
         params: {
           page,
           limit: 15,
@@ -47,7 +47,7 @@ export default function AdminOrdersPage() {
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
-      api.patch(`/orders/${id}/status`, { status }),
+      api.put(`/admin/orders/${id}/status`, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
       toast.success('Status atualizado.')
@@ -106,14 +106,14 @@ export default function AdminOrdersPage() {
                     ))}
                   </tr>
                 ))
-              ) : data?.orders.length === 0 ? (
+              ) : (data?.orders?.length ?? 0) === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12 text-muted-foreground">
                     Nenhum pedido encontrado.
                   </td>
                 </tr>
               ) : (
-                data?.orders.map((order) => (
+                data?.orders?.map((order) => (
                   <tr key={order.id} className="border-b hover:bg-muted/20 transition-colors">
                     <td className="px-4 py-3 text-sm font-medium">#{order.orderNumber}</td>
                     <td className="px-4 py-3">

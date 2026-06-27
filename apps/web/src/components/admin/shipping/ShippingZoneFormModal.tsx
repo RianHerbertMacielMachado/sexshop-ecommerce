@@ -64,8 +64,8 @@ export default function ShippingZoneFormModal({ isOpen, onClose, zone }: Props) 
         states: data.states.split(',').map((s) => s.trim().toUpperCase()).filter((s) => BR_STATES.includes(s)),
       }
       return isEditing
-        ? api.put(`/shipping/zones/${zone!.id}`, payload)
-        : api.post('/shipping/zones', payload)
+        ? api.put(`/shipping/admin/zones/${zone!.id}`, payload)
+        : api.post('/shipping/admin/zones', payload)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-shipping-zones'] })

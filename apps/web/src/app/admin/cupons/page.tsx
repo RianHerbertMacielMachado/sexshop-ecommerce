@@ -18,13 +18,13 @@ export default function AdminCouponsPage() {
   const { data: coupons = [], isLoading } = useQuery({
     queryKey: ['admin-coupons'],
     queryFn: async () => {
-      const res = await api.get('/coupons')
-      return res.data.data as Coupon[]
+      const res = await api.get('/coupons/admin')
+      return res.data.data?.coupons as Coupon[]
     },
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/coupons/${id}`),
+    mutationFn: (id: string) => api.delete(`/coupons/admin/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-coupons'] })
       toast.success('Cupom removido.')

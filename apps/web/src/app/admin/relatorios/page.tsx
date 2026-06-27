@@ -50,7 +50,7 @@ export default function AdminReportsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-reports', period],
     queryFn: async () => {
-      const res = await api.get('/admin/reports', {
+      const res = await api.get('/admin/reports/sales', {
         params: { period },
       })
       return res.data.data
@@ -59,7 +59,7 @@ export default function AdminReportsPage() {
 
   const handleExport = async () => {
     try {
-      const res = await api.get('/admin/reports/export', {
+      const res = await api.get('/admin/reports/sales/export', {
         params: { period },
         responseType: 'blob',
       })
@@ -129,9 +129,11 @@ export default function AdminReportsPage() {
             <LineChart data={data?.revenueByPeriod ?? []}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${v}`} />
+              <YAxis yAxisId="left" tick={{ fontSize: 11 }} tickFormatter={(v) => `R$${v}`} />
+              <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} />
               <Tooltip formatter={(v: number) => [formatCurrency(v), 'Receita']} />
               <Line
+                yAxisId="left"
                 type="monotone"
                 dataKey="revenue"
                 stroke="hsl(var(--primary))"
@@ -139,12 +141,12 @@ export default function AdminReportsPage() {
                 dot={false}
               />
               <Line
+                yAxisId="right"
                 type="monotone"
                 dataKey="orders"
                 stroke="#10b981"
                 strokeWidth={2}
                 dot={false}
-                yAxisId="right"
               />
             </LineChart>
           </ResponsiveContainer>
