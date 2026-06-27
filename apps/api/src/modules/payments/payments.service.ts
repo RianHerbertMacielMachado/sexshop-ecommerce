@@ -6,6 +6,8 @@ import { ordersService } from '../orders/orders.service'
 import { env } from '../../lib/env'
 import { logger } from '../../lib/logger'
 import Stripe from 'stripe'
+import { Prisma } from '@prisma/client'
+import type { CreatePaymentMethodInput, UpdatePaymentMethodInput } from './payments.schema'
 
 export class PaymentsService {
   async createStripeCheckout(orderId: string, userId?: string) {
@@ -226,6 +228,76 @@ export class PaymentsService {
         order: true,
       },
     })
+  }
+
+  // ── Admin CRUD ──────────────────────────────────────────────────────────────
+
+  async listAllMethods() {
+    return prisma.paymentMethod.findMany({
+      orderBy: { order: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        instructions: true,
+        icon: true,
+        isActive: true,
+        order: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+  }
+
+  async createMethod(input: CreatePaymentMethodInput) {
+    return prisma.paymentMethod.create({
+      data: {
+        name: input.name,
+        type: input.type as import('@prisma/client').PaymentMethodType,
+        instructions: input.instructions ?? null,
+        icon: input.icon ?? null,
+        isActive: input.isActive ?? true,
+        order: input.order ?? 0,
+        config: input.config != null
+          ? (input.config as Prisma.InputJsonValue)
+          : Prisma.DbNull,
+      },
+    })
+  }
+
+  async updateMethod(id: string, input: UpdatePaymentMethodInput) {
+    const existing = await prisma.paymentMethod.findUnique({ where: { id } })
+    if (!existing) throw new NotFoundError('Método de pagamento')
+
+    const data: Prisma.PaymentMethodUpdateInput = {}
+    if (input.name !== undefined)         data.name = input.name
+    if (input.type !== undefined)         data.type = input.type
+    if (input.instructions !== undefined) data.instructions = input.instructions
+    if (input.icon !== undefined)         data.icon = input.icon
+    if (input.isActive !== undefined)     data.isActive = input.isActive
+    if (input.order !== undefined)        data.order = input.order
+    if (input.config !== undefined) {
+      data.config = input.config != null
+        ? (input.config as Prisma.InputJsonValue)
+        : Prisma.DbNull
+    }
+
+    return prisma.paymentMethod.update({ where: { id }, data })
+  }
+
+  async toggleMethod(id: string) {
+    const existing = await prisma.paymentMethod.findUnique({ where: { id } })
+    if (!existing) throw new NotFoundError('Método de pagamento')
+    return prisma.paymentMethod.update({
+      where: { id },
+      data: { isActive: !existing.isActive },
+    })
+  }
+
+  async deleteMethod(id: string) {
+    const existing = await prisma.paymentMethod.findUnique({ where: { id } })
+    if (!existing) throw new NotFoundError('Método de pagamento')
+    await prisma.paymentMethod.delete({ where: { id } })
   }
 }
 
