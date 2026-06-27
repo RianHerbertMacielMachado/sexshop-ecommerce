@@ -258,12 +258,13 @@ export class ProductsService {
         name: input.name,
         slug,
         description: input.description ?? null,
+        shortDescription: (input as { shortDescription?: string }).shortDescription ?? null,
         price: input.price,
         compareAtPrice: input.compareAtPrice ?? null,
         sku: input.sku,
         stock: input.stock ?? 0,
         weight: input.weight ?? null,
-        images: [],
+        images: (input as { images?: string[] }).images ?? [],
         categoryId: input.categoryId,
         isActive: input.isActive ?? true,
         isFeatured: input.isFeatured ?? false,
@@ -294,26 +295,33 @@ export class ProductsService {
       slug = await ensureUniqueSlug(baseSlug, id)
     }
 
+    // Constrói o objeto data apenas com os campos que foram enviados
+    // Campos ausentes (undefined) são omitidos para não sobrescrever dados existentes
+    const data: Prisma.ProductUpdateInput = { updatedAt: new Date() }
+
+    if (input.name !== undefined)        data.name = input.name
+    if (slug !== undefined)              data.slug = slug
+    if (input.description !== undefined) data.description = input.description
+    if ((input as { shortDescription?: string }).shortDescription !== undefined)
+      data.shortDescription = (input as { shortDescription?: string }).shortDescription
+    if (input.price !== undefined)       data.price = input.price
+    if (input.compareAtPrice !== undefined) data.compareAtPrice = input.compareAtPrice ?? null
+    if (input.sku !== undefined)         data.sku = input.sku
+    if (input.stock !== undefined)       data.stock = input.stock
+    if (input.weight !== undefined)      data.weight = input.weight ?? null
+    if (input.categoryId !== undefined)  data.category = { connect: { id: input.categoryId } }
+    if (input.isActive !== undefined)    data.isActive = input.isActive
+    if (input.isFeatured !== undefined)  data.isFeatured = input.isFeatured
+    if (input.isDiscreet !== undefined)  data.isDiscreet = input.isDiscreet
+    if ((input as { images?: string[] }).images !== undefined)
+      data.images = (input as { images?: string[] }).images
+    if (input.tags !== undefined)        data.tags = input.tags
+    if (input.metaTitle !== undefined)   data.metaTitle = input.metaTitle ?? null
+    if (input.metaDescription !== undefined) data.metaDescription = input.metaDescription ?? null
+
     return prisma.product.update({
       where: { id },
-      data: {
-        name: input.name,
-        slug,
-        description: input.description,
-        price: input.price,
-        compareAtPrice: input.compareAtPrice,
-        sku: input.sku,
-        stock: input.stock,
-        weight: input.weight,
-        categoryId: input.categoryId,
-        isActive: input.isActive,
-        isFeatured: input.isFeatured,
-        isDiscreet: input.isDiscreet,
-        metaTitle: input.metaTitle,
-        metaDescription: input.metaDescription,
-        tags: input.tags,
-        updatedAt: new Date(),
-      },
+      data,
       include: {
         category: { select: { id: true, name: true, slug: true } },
         variants: true,

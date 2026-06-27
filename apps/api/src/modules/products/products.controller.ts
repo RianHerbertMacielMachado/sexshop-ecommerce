@@ -22,6 +22,11 @@ export const getProductBySlug = asyncHandler(async (req: Request, res: Response)
   res.json({ success: true, message: 'Produto encontrado', data: { product } })
 })
 
+export const getProductById = asyncHandler(async (req: Request, res: Response) => {
+  const product = await productsService.findById(req.params.id)
+  res.json({ success: true, message: 'Produto encontrado', data: { product } })
+})
+
 export const getFeaturedProducts = asyncHandler(async (_req: Request, res: Response) => {
   const products = await productsService.getFeatured()
   res.json({ success: true, message: 'Produtos em destaque', data: { products } })

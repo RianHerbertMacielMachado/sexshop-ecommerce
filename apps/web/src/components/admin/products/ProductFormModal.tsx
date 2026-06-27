@@ -25,7 +25,9 @@ import ImageUploader from '@/components/admin/products/ImageUploader'
 
 const productSchema = z.object({
   name: z.string().min(2, 'Nome obrigatório'),
+  slug: z.string().optional(),
   description: z.string().optional(),
+  shortDescription: z.string().optional(),
   price: z.coerce.number().positive('Preço deve ser positivo'),
   compareAtPrice: z.coerce.number().optional(),
   sku: z.string().min(1, 'SKU obrigatório'),
@@ -36,6 +38,8 @@ const productSchema = z.object({
   isDiscreet: z.boolean().optional(),
   weight: z.coerce.number().optional(),
   tags: z.string().optional(),
+  metaTitle: z.string().optional(),
+  metaDescription: z.string().optional(),
 })
 
 type ProductFormData = z.infer<typeof productSchema>
@@ -60,6 +64,16 @@ export default function ProductFormModal({ isOpen, onClose, product }: Props) {
     enabled: isOpen,
   })
 
+  // Busca o produto completo para garantir todos os campos (slug, shortDescription, metaTitle etc.)
+  const { data: fullProduct } = useQuery({
+    queryKey: ['product-full', product?.id],
+    queryFn: async () => {
+      const res = await api.get(`/products/admin/${product!.id}`)
+      return res.data.data.product as Product
+    },
+    enabled: isOpen && isEditing && !!product?.id,
+  })
+
   const {
     register,
     handleSubmit,
@@ -69,30 +83,38 @@ export default function ProductFormModal({ isOpen, onClose, product }: Props) {
     formState: { errors },
   } = useForm<ProductFormData>({ resolver: zodResolver(productSchema) })
 
+  // Popula o formulário quando o produto completo estiver disponível (modo edição)
   useEffect(() => {
-    if (isOpen) {
-      if (product) {
-        reset({
-          name: product.name,
-          description: product.description ?? '',
-          price: product.price,
-          compareAtPrice: product.compareAtPrice ?? undefined,
-          sku: product.sku,
-          stock: product.stock,
-          categoryId: product.categoryId,
-          isActive: product.isActive,
-          isFeatured: product.isFeatured ?? false,
-          isDiscreet: product.isDiscreet ?? false,
-          weight: product.weight ?? undefined,
-          tags: product.tags?.join(', ') ?? '',
-        })
-        setImages(product.images ?? [])
-      } else {
-        reset({ isActive: true, isFeatured: false, isDiscreet: false, stock: 0, price: 0 })
-        setImages([])
-      }
+    if (isOpen && isEditing && fullProduct) {
+      reset({
+        name: fullProduct.name,
+        slug: fullProduct.slug ?? '',
+        description: fullProduct.description ?? '',
+        shortDescription: fullProduct.shortDescription ?? '',
+        price: fullProduct.price,
+        compareAtPrice: fullProduct.compareAtPrice ?? undefined,
+        sku: fullProduct.sku,
+        stock: fullProduct.stock,
+        categoryId: fullProduct.categoryId,
+        isActive: fullProduct.isActive,
+        isFeatured: fullProduct.isFeatured ?? false,
+        isDiscreet: fullProduct.isDiscreet ?? false,
+        weight: fullProduct.weight ?? undefined,
+        tags: fullProduct.tags?.join(', ') ?? '',
+        metaTitle: fullProduct.metaTitle ?? '',
+        metaDescription: fullProduct.metaDescription ?? '',
+      })
+      setImages(fullProduct.images ?? [])
     }
-  }, [isOpen, product, reset])
+  }, [isOpen, isEditing, fullProduct, reset])
+
+  // Inicializa o formulário ao abrir em modo criação
+  useEffect(() => {
+    if (isOpen && !isEditing) {
+      reset({ isActive: true, isFeatured: false, isDiscreet: false, stock: 0, price: 0 })
+      setImages([])
+    }
+  }, [isOpen, isEditing, reset])
 
   const mutation = useMutation({
     mutationFn: (data: ProductFormData) => {
@@ -100,6 +122,9 @@ export default function ProductFormModal({ isOpen, onClose, product }: Props) {
         ...data,
         images,
         tags: data.tags ? data.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+        compareAtPrice: data.compareAtPrice || undefined,
+        weight: data.weight || undefined,
+        slug: data.slug || undefined,
       }
       return isEditing
         ? api.put(`/products/${product!.id}`, payload)
@@ -114,6 +139,18 @@ export default function ProductFormModal({ isOpen, onClose, product }: Props) {
   })
 
   if (!isOpen) return null
+
+  // Em modo edição, aguarda o produto completo carregar antes de renderizar o form
+  if (isEditing && !fullProduct) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="bg-background rounded-2xl border shadow-xl p-8 flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Carregando produto...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-8 px-4">
@@ -136,8 +173,13 @@ export default function ProductFormModal({ isOpen, onClose, product }: Props) {
             </div>
 
             <div className="sm:col-span-2 space-y-1">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea id="description" {...register('description')} rows={3} />
+              <Label htmlFor="description">Descrição Curta</Label>
+              <Textarea id="description" {...register('shortDescription')} rows={2} placeholder="Resumo exibido na listagem..." />
+            </div>
+
+            <div className="sm:col-span-2 space-y-1">
+              <Label htmlFor="fullDescription">Descrição Completa</Label>
+              <Textarea id="fullDescription" {...register('description')} rows={4} placeholder="Descrição detalhada do produto..." />
             </div>
 
             <div className="space-y-1">
@@ -218,6 +260,17 @@ export default function ProductFormModal({ isOpen, onClose, product }: Props) {
                 onCheckedChange={(v) => setValue('isDiscreet', v)}
               />
             </div>
+          </div>
+
+          {/* SEO */}
+          <div className="sm:col-span-2 space-y-1">
+            <Label htmlFor="metaTitle">Meta Title (SEO)</Label>
+            <Input id="metaTitle" {...register('metaTitle')} placeholder="Título para SEO (padrão: nome do produto)" />
+          </div>
+
+          <div className="sm:col-span-2 space-y-1">
+            <Label htmlFor="metaDescription">Meta Description (SEO)</Label>
+            <Textarea id="metaDescription" {...register('metaDescription')} rows={2} placeholder="Descrição nos resultados de busca (máx. 160 caracteres)" />
           </div>
 
           {/* Imagens */}

@@ -15,6 +15,7 @@ router.get('/related/:id', controller.getRelatedProducts)
 router.get('/:slug', controller.getProductBySlug)
 
 // Rotas admin
+router.get('/admin/:id', authMiddleware, isAdmin, controller.getProductById)
 router.post(
   '/',
   authMiddleware,

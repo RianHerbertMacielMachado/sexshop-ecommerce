@@ -3,7 +3,9 @@ import { z } from 'zod'
 export const createProductSchema = z.object({
   body: z.object({
     name: z.string().min(2).max(200),
+    slug: z.string().optional(),
     description: z.string().optional(),
+    shortDescription: z.string().optional(),
     price: z.coerce.number().positive(),
     compareAtPrice: z.coerce.number().positive().optional(),
     sku: z.string().min(1).max(100),
@@ -13,6 +15,7 @@ export const createProductSchema = z.object({
     isActive: z.coerce.boolean().optional().default(true),
     isFeatured: z.coerce.boolean().optional().default(false),
     isDiscreet: z.coerce.boolean().optional().default(false),
+    images: z.array(z.string().url()).optional().default([]),
     tags: z.array(z.string()).optional().default([]),
     metaTitle: z.string().optional(),
     metaDescription: z.string().optional(),
@@ -24,7 +27,9 @@ export const createProductSchema = z.object({
 export const updateProductSchema = z.object({
   body: z.object({
     name: z.string().min(2).max(200).optional(),
+    slug: z.string().optional(),
     description: z.string().optional(),
+    shortDescription: z.string().optional(),
     price: z.coerce.number().positive().optional(),
     compareAtPrice: z.coerce.number().positive().optional(),
     sku: z.string().min(1).max(100).optional(),
@@ -34,6 +39,7 @@ export const updateProductSchema = z.object({
     isActive: z.coerce.boolean().optional(),
     isFeatured: z.coerce.boolean().optional(),
     isDiscreet: z.coerce.boolean().optional(),
+    images: z.array(z.string().url()).optional(),
     tags: z.array(z.string()).optional(),
     metaTitle: z.string().optional(),
     metaDescription: z.string().optional(),
