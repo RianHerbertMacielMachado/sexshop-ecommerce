@@ -55,6 +55,7 @@ RUN addgroup --system --gid 1001 nodejs \
 # Copia apenas o necessário para produção
 COPY --from=builder /app/apps/api/dist ./dist
 COPY --from=builder /app/apps/api/package*.json ./
+COPY --from=builder /app/package-lock.json ./
 COPY --from=builder /app/prisma ./prisma
 
 # Instala apenas dependências de produção
