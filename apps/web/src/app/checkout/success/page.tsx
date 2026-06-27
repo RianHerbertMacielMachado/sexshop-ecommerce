@@ -96,7 +96,7 @@ function SuccessContent() {
 
             <div className="flex flex-col sm:flex-row gap-3">
               <Link
-                href="/minha-conta/pedidos"
+                href="/conta/pedidos"
                 className="flex-1 flex items-center justify-center gap-2 py-3 gradient-primary text-white rounded-xl font-semibold hover:opacity-90"
               >
                 <Package size={18} /> Acompanhar Pedido

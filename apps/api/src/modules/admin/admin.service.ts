@@ -21,7 +21,7 @@ export class AdminService {
       lowStockProducts,
       topProducts,
       recentOrders,
-      last30DaysRevenue,
+      ordersLast30Days,
       totalProducts,
     ] = await Promise.all([
       prisma.order.aggregate({ where: { paymentStatus: 'PAID', paidAt: { gte: todayStart } }, _sum: { total: true }, _count: true }),
@@ -51,22 +51,33 @@ export class AdminService {
           items: { select: { productName: true }, take: 1 },
         },
       }),
-      prisma.$queryRaw<Array<{ date: string; revenue: number; orders: number }>>`
-        SELECT
-          DATE(created_at) as date,
-          COALESCE(SUM(CASE WHEN payment_status = 'PAID' THEN total ELSE 0 END), 0)::float as revenue,
-          COUNT(*)::int as orders
-        FROM orders
-        WHERE created_at >= ${last30DaysStart}
-        GROUP BY DATE(created_at)
-        ORDER BY date ASC
-      `,
+      // Substituído $queryRaw por query Prisma — agrupa por dia em memória
+      prisma.order.findMany({
+        where: { createdAt: { gte: last30DaysStart } },
+        select: { createdAt: true, total: true, paymentStatus: true },
+        orderBy: { createdAt: 'asc' },
+      }),
       prisma.product.count({ where: { isActive: true } }),
     ])
 
     const statusMap = Object.fromEntries(
       ordersByStatus.map((s) => [s.status, s._count.status])
     )
+
+    // Agrupa pedidos por dia em memória (evita $queryRaw com sintaxe PostgreSQL)
+    const revenueByDay = new Map<string, { revenue: number; orders: number }>()
+    for (const order of ordersLast30Days) {
+      const date = order.createdAt.toISOString().split('T')[0]
+      const entry = revenueByDay.get(date) ?? { revenue: 0, orders: 0 }
+      entry.orders += 1
+      if (order.paymentStatus === 'PAID') {
+        entry.revenue += Number(order.total)
+      }
+      revenueByDay.set(date, entry)
+    }
+    const last30DaysRevenue = Array.from(revenueByDay.entries())
+      .map(([date, v]) => ({ date, revenue: v.revenue, orders: v.orders }))
+      .sort((a, b) => a.date.localeCompare(b.date))
 
     return {
       revenue: {
