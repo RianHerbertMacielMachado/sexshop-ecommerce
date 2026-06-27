@@ -116,10 +116,9 @@ export class OrdersService {
           paymentStatus: 'PENDING',
           paymentMethod: input.paymentMethod,
           subtotal,
-          discount,
+          discountAmount: discount,
           shippingCost,
           total,
-          couponId,
           couponCode: input.couponCode?.toUpperCase() ?? null,
           notes: input.notes ?? null,
           isDiscreetPackaging: input.isDiscreetPackaging,
@@ -144,7 +143,7 @@ export class OrdersService {
               city: input.shippingAddress.city,
               state: input.shippingAddress.state,
               zipCode: input.shippingAddress.zipCode,
-              phone: input.shippingAddress.phone ?? null,
+
             },
           },
           statusHistory: {
@@ -229,7 +228,7 @@ export class OrdersService {
         take: limit,
         orderBy: { createdAt: 'desc' },
         include: {
-          items: { select: { productName: true, productImage: true, quantity: true, price: true } },
+          items: { select: { productName: true, quantity: true, price: true } },
           shippingAddress: { select: { city: true, state: true } },
         },
       }),
@@ -258,6 +257,7 @@ export class OrdersService {
     if (endDate) where.createdAt = { ...(where.createdAt as object), lte: new Date(endDate) }
     if (minValue !== undefined) where.total = { ...(where.total as object), gte: minValue }
     if (maxValue !== undefined) where.total = { ...(where.total as object), lte: maxValue }
+
 
     const [orders, total] = await prisma.$transaction([
       prisma.order.findMany({
@@ -345,17 +345,10 @@ export class OrdersService {
 
       for (const item of order.items) {
         if (!item.productId) continue
-        if (item.variantId) {
-          await tx.productVariant.update({
-            where: { id: item.variantId },
-            data: { stock: { decrement: item.quantity } },
-          })
-        } else {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { stock: { decrement: item.quantity }, soldCount: { increment: item.quantity } },
-          })
-        }
+        await tx.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity }, soldCount: { increment: item.quantity } },
+        })
       }
     })
 

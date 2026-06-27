@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { authMiddleware, isAdmin } from '../../middleware/auth.middleware'
 import { auditLog } from '../../middleware/audit.middleware'
 import { asyncHandler } from '../../middleware/error.middleware'
-import { couponsService, createCouponSchema, updateCouponSchema } from './coupons.service'
+import { couponsService, createCouponSchema, updateCouponSchema, CreateCouponInput } from './coupons.service'
 import { validateBody } from '../../lib/validate'
 
 const router = Router()
@@ -19,7 +19,7 @@ router.get('/admin', authMiddleware, isAdmin, asyncHandler(async (_req, res) => 
 }))
 
 router.post('/admin', authMiddleware, isAdmin, auditLog({ entity: 'Coupon' }), asyncHandler(async (req, res) => {
-  const input = validateBody(createCouponSchema, req.body)
+  const input = validateBody(createCouponSchema, req.body) as CreateCouponInput
   const coupon = await couponsService.create(input)
   res.status(201).json({ success: true, message: 'Cupom criado', data: { coupon } })
 }))

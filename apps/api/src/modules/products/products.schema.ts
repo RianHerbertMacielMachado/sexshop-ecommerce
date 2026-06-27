@@ -83,9 +83,9 @@ export const updateVariantSchema = z.object({
   body: z.object({
     name: z.string().min(1).optional(),
     value: z.string().min(1).optional(),
-    price: z.coerce.number().positive().optional().nullable(),
+    price: z.coerce.number().positive().optional(),
     stock: z.coerce.number().int().min(0).optional(),
-    sku: z.string().optional().nullable(),
+    sku: z.string().optional(),
     isActive: z.coerce.boolean().optional(),
   }),
   query: z.object({}).optional(),

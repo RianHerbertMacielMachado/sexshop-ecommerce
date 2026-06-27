@@ -18,6 +18,7 @@ export const createCategorySchema = z.object({
 export const updateCategorySchema = z.object({
   body: z.object({
     name: z.string().min(2).max(100).optional(),
+    slug: z.string().min(2).max(120).optional(),
     description: z.string().optional(),
     imageUrl: z.string().url().optional(),
     parentId: z.string().cuid().optional().nullable(),

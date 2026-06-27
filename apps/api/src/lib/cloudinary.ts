@@ -16,6 +16,7 @@ export type UploadFolder =
   | 'banners'
   | 'avatars'
   | 'logos'
+  | 'brand'
 
 export interface UploadResult {
   publicId: string

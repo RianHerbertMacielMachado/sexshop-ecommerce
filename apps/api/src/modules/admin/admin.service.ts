@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client'
 import { prisma } from '../../lib/prisma'
 
 export class AdminService {
@@ -244,7 +245,7 @@ export class AdminService {
       data: {
         name: input.name,
         type: input.type,
-        config: encryptedConfig as unknown as Record<string, unknown>,
+        config: encryptedConfig as unknown as Prisma.InputJsonValue,
         instructions: input.instructions ?? null,
         icon: input.icon ?? null,
         order: input.order ?? 0,

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express'
+import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { logger } from '../lib/logger'
 
@@ -43,10 +44,10 @@ export function auditLog(options: AuditOptions) {
           data: {
             userId: req.user.id,
             action,
-            entity: options.entity,
-            entityId: entityId ?? null,
-            newValues: req.method !== 'DELETE' ? (req.body as Record<string, unknown>) : null,
-            ipAddress:
+            resource: options.entity,
+            resourceId: entityId ?? null,
+            newData: req.method !== 'DELETE' ? (req.body as Prisma.InputJsonObject) : undefined,
+            ip:
               (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ?? req.ip ?? null,
             userAgent: req.headers['user-agent'] ?? null,
           },

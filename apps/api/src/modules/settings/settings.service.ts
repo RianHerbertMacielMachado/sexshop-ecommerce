@@ -54,14 +54,15 @@ export class SettingsService {
   async update(input: UpdateSettingsInput) {
     return prisma.siteSettings.upsert({
       where: { id: 'singleton' },
-      update: { ...input, updatedAt: new Date() },
+      update: { ...input, storeEmail: input.storeEmail ?? undefined, updatedAt: new Date() },
       create: {
         id: 'singleton',
+        ...input,
         storeName: input.storeName ?? 'Minha Sexy Shop',
         primaryColor: input.primaryColor ?? '#7c3aed',
         secondaryColor: input.secondaryColor ?? '#db2777',
         socialLinks: input.socialLinks ?? {},
-        ...input,
+        storeEmail: input.storeEmail ?? undefined,
       },
     })
   }
@@ -83,7 +84,7 @@ export class SettingsService {
       const publicId = extractPublicId(settings.faviconUrl)
       if (publicId) await deleteImage(publicId).catch(() => {})
     }
-    const result = await uploadImage(file.buffer, 'sexshop/brand', {
+    const result = await uploadImage(file.buffer, 'brand', {
       transformation: [{ width: 32, height: 32, crop: 'fill' }],
     })
     await prisma.siteSettings.update({ where: { id: 'singleton' }, data: { faviconUrl: result.url } })

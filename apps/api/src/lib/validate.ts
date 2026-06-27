@@ -22,7 +22,7 @@ export function validate<T extends ZodRawShape>(
     )
   }
 
-  return result.data as ReturnType<typeof schema.parse>
+  return result.data as { body: ReturnType<ZodObject<T>['parse']>['body']; query: ReturnType<ZodObject<T>['parse']>['query']; params: ReturnType<ZodObject<T>['parse']>['params'] }
 }
 
 export function validateBody<T>(schema: ZodSchema<T>, data: unknown): T {

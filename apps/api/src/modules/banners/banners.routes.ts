@@ -3,7 +3,7 @@ import { BannerPosition } from '@prisma/client'
 import { authMiddleware, isAdmin } from '../../middleware/auth.middleware'
 import { uploadFields, uploadSingle } from '../../middleware/multer.middleware'
 import { asyncHandler, AppError } from '../../middleware/error.middleware'
-import { bannersService, createBannerSchema } from './banners.service'
+import { bannersService, createBannerSchema, CreateBannerInput } from './banners.service'
 import { validateBody } from '../../lib/validate'
 
 const router = Router()
@@ -26,7 +26,7 @@ router.get('/admin', authMiddleware, isAdmin, asyncHandler(async (_req, res) => 
 router.post('/admin', authMiddleware, isAdmin, uploadFields, asyncHandler(async (req, res) => {
   const files = req.files as { image?: Express.Multer.File[]; mobileImage?: Express.Multer.File[] }
   if (!files.image?.[0]) throw new AppError('Imagem é obrigatória', 400)
-  const input = validateBody(createBannerSchema, req.body)
+  const input = validateBody(createBannerSchema, req.body) as CreateBannerInput
   const banner = await bannersService.create(input, files.image[0], files.mobileImage?.[0])
   res.status(201).json({ success: true, message: 'Banner criado', data: { banner } })
 }))

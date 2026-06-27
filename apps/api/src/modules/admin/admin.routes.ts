@@ -78,7 +78,7 @@ router.get('/reports/sales/export', asyncHandler(async (req, res: Response) => {
       'Status': order.status,
       'Método de Pagamento': order.paymentMethod,
       'Subtotal': Number(order.subtotal).toFixed(2),
-      'Desconto': Number(order.discount).toFixed(2),
+      'Desconto': Number(order.discountAmount).toFixed(2),
       'Frete': Number(order.shippingCost).toFixed(2),
       'Total': Number(order.total).toFixed(2),
       'Cidade': order.shippingAddress?.city ?? '',

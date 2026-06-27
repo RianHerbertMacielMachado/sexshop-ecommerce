@@ -74,6 +74,8 @@ export const listOrdersSchema = z.object({
       .optional(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
+    minValue: z.coerce.number().optional(),
+    maxValue: z.coerce.number().optional(),
   }),
   params: z.object({}).optional(),
 })

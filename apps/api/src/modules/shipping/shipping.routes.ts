@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { authMiddleware, isAdmin } from '../../middleware/auth.middleware'
 import { auditLog } from '../../middleware/audit.middleware'
 import { asyncHandler } from '../../middleware/error.middleware'
-import { shippingService, createShippingZoneSchema } from './shipping.service'
+import { shippingService, createShippingZoneSchema, CreateShippingZoneInput } from './shipping.service'
 import { validateBody } from '../../lib/validate'
 
 const router = Router()
@@ -24,7 +24,7 @@ router.get('/admin/zones', authMiddleware, isAdmin, asyncHandler(async (_req, re
 }))
 
 router.post('/admin/zones', authMiddleware, isAdmin, auditLog({ entity: 'ShippingZone' }), asyncHandler(async (req, res) => {
-  const input = validateBody(createShippingZoneSchema, req.body)
+  const input = validateBody(createShippingZoneSchema, req.body) as CreateShippingZoneInput
   const zone = await shippingService.createZone(input)
   res.status(201).json({ success: true, message: 'Zona criada', data: { zone } })
 }))

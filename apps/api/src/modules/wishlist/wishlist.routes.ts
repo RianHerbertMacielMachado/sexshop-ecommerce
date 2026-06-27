@@ -15,7 +15,7 @@ router.get('/', authMiddleware, asyncHandler(async (req, res) => {
           name: true,
           slug: true,
           price: true,
-          comparePrice: true,
+          compareAtPrice: true,
           images: true,
           stock: true,
           isActive: true,

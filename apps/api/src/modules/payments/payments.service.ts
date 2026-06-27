@@ -30,7 +30,7 @@ export class PaymentsService {
       items: order.items.map((item) => ({
         name: item.productName,
         variantName: item.variantName ?? undefined,
-        imageUrl: item.productImage ?? undefined,
+        imageUrl: undefined,
         price: Number(item.price),
         quantity: item.quantity,
       })),
@@ -80,7 +80,7 @@ export class PaymentsService {
       case 'payment_intent.payment_failed': {
         const paymentIntent = event.data.object as Stripe.PaymentIntent
         const order = await prisma.order.findFirst({
-          where: { stripePaymentIntentId: paymentIntent.id },
+          where: { stripeSessionId: paymentIntent.id },
         })
         if (order) {
           await prisma.order.update({
@@ -103,7 +103,7 @@ export class PaymentsService {
 
         if (paymentIntentId) {
           const order = await prisma.order.findFirst({
-            where: { stripePaymentIntentId: paymentIntentId },
+            where: { stripeSessionId: paymentIntentId },
           })
           if (order) {
             await prisma.order.update({
@@ -183,7 +183,7 @@ export class PaymentsService {
 
     const status = await getPixPaymentStatus(order.mpPaymentId)
 
-    if (status.isPaid && order.paymentStatus !== 'PAID') {
+    if (status.isPaid && order.paymentStatus !== 'REFUNDED') {
       await ordersService.confirmPayment(orderId, { mpPaymentId: order.mpPaymentId })
       return { isPaid: true, status: 'PAID', orderId }
     }

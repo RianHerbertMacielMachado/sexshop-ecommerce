@@ -245,11 +245,11 @@ export class AuthService {
       throw new AppError('Token expirado. Solicite um novo link de recuperação', 400)
     }
 
-    if (tokenRecord.usedAt) {
+    if (tokenRecord.used) {
       throw new AppError('Token já utilizado', 400)
     }
 
-    const hashedPassword = await bcrypt.hash(input.newPassword, SALT_ROUNDS)
+    const hashedPassword = await bcrypt.hash(input.password, SALT_ROUNDS)
 
     await prisma.$transaction([
       prisma.user.update({
@@ -258,7 +258,7 @@ export class AuthService {
       }),
       prisma.passwordResetToken.update({
         where: { id: tokenRecord.id },
-        data: { usedAt: new Date() },
+        data: { used: true },
       }),
       prisma.refreshToken.deleteMany({ where: { userId: tokenRecord.userId } }),
     ])
