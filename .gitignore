@@ -38,6 +38,9 @@ Thumbs.db
 # Testing
 coverage/
 
+# Next.js
+next-env.d.ts
+
 # Turbo
 .turbo/
 
