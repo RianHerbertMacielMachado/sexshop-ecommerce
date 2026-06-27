@@ -20,13 +20,13 @@ export default function BottomBanner() {
 
   return (
     <section className="relative h-48 md:h-64 overflow-hidden bg-zinc-900">
-      <Image src={banner.imageUrl} alt={banner.title} fill className="object-cover opacity-70" sizes="100vw" />
+      <Image src={banner.imageUrl ?? '/placeholder.svg'} alt={banner.title ?? ''} fill className="object-cover opacity-70" sizes="100vw" />
       <div className="absolute inset-0 flex items-center justify-center text-center">
         <div>
-          <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">{banner.title}</h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">{banner.title ?? ''}</h3>
           {banner.subtitle && <p className="text-white/80 mb-4">{banner.subtitle}</p>}
-          {banner.link && (
-            <Link href={banner.link} className="inline-block px-8 py-3 gradient-primary text-white rounded-full font-bold hover:opacity-90 transition-opacity">
+          {banner.linkUrl && (
+            <Link href={banner.linkUrl} className="inline-block px-8 py-3 gradient-primary text-white rounded-full font-bold hover:opacity-90 transition-opacity">
               Aproveitar
             </Link>
           )}

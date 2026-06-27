@@ -20,7 +20,7 @@ export type PaymentStatus =
 
 export type CouponType = 'PERCENTAGE' | 'FIXED' | 'FREE_SHIPPING'
 
-export type PaymentMethodType = 'STRIPE' | 'PIX' | 'BOLETO'
+export type PaymentMethodType = 'STRIPE_CARD' | 'PIX' | 'BOLETO' | 'MANUAL'
 
 export type BannerPosition =
   | 'HOME_HERO'
@@ -67,6 +67,16 @@ export interface Address {
 
 // ── Category ───────────────────────────────────────────
 
+export interface CategorySummary {
+  id: string
+  name: string
+  slug: string
+  imageUrl?: string | null
+  _count?: {
+    products: number
+  }
+}
+
 export interface Category {
   id: string
   name: string
@@ -74,6 +84,7 @@ export interface Category {
   description?: string | null
   imageUrl?: string | null
   parentId?: string | null
+  parent?: { id: string; name: string; slug: string } | null
   isActive: boolean
   order: number
   metaTitle?: string | null
@@ -105,6 +116,7 @@ export interface Product {
   name: string
   slug: string
   description?: string | null
+  shortDescription?: string | null
   price: number
   compareAtPrice?: number | null
   sku: string
@@ -146,6 +158,7 @@ export interface ProductSummary {
 
 export interface CartItem {
   id: string
+  productId: string
   name: string
   slug: string
   price: number
@@ -245,7 +258,8 @@ export interface PaymentMethod {
 export interface Review {
   id: string
   productId: string
-  userId: string
+  userId: string | null
+  guestName?: string | null
   rating: number
   title?: string | null
   comment?: string | null
@@ -295,6 +309,7 @@ export interface ShippingOption {
   name: string
   price: number
   deliveryDays: number
+  estimatedDays?: string
   isFree: boolean
 }
 
@@ -315,6 +330,9 @@ export interface SiteSettings {
   metaTitle?: string | null
   metaDescription?: string | null
   primaryColor?: string | null
+  secondaryColor?: string | null
+  footerText?: string | null
+  socialLinks?: Record<string, string> | null
   updatedAt: string
 }
 
@@ -352,5 +370,6 @@ export interface PaginatedResponse<T> {
   total: number
   page: number
   pages: number
+  totalPages: number
   limit: number
 }

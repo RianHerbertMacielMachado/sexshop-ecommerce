@@ -42,7 +42,7 @@ export default function ProductDetailClient({ product }: Props) {
 
   const currentPrice = selectedVariant?.price ? Number(selectedVariant.price) : Number(product.price)
   const currentStock = selectedVariant ? selectedVariant.stock : product.stock
-  const discount = calculateDiscount(currentPrice, Number(product.comparePrice ?? 0))
+  const discount = calculateDiscount(currentPrice, Number(product.compareAtPrice ?? 0))
   const stockStatus = formatStockStatus(currentStock)
   const inWishlist = isInWishlist(product.id)
 
@@ -53,8 +53,9 @@ export default function ProductDetailClient({ product }: Props) {
       selectedVariant ?? undefined
     )
     if (isDiscreet) {
-      const cartStore = (await import('@/stores/cartStore')).useCartStore.getState()
-      cartStore.setDiscreetPackaging(true)
+      import('@/stores/cartStore').then(({ useCartStore }) => {
+        useCartStore.getState().setDiscreetPackaging(true)
+      })
     }
   }
 
@@ -137,25 +138,25 @@ export default function ProductDetailClient({ product }: Props) {
             <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 mt-1 leading-tight">{product.name}</h1>
           </div>
 
-          {product.reviewCount > 0 && (
+          {(product.reviewCount ?? 0) > 0 && (
             <a href="#reviews" className="flex items-center gap-2">
               <div className="flex">
                 {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} size={14} className={s <= Math.round(product.averageRating) ? 'text-amber-400 fill-amber-400' : 'text-zinc-200 fill-zinc-200'} />
+                  <Star key={s} size={14} className={s <= Math.round(product.averageRating ?? 0) ? 'text-amber-400 fill-amber-400' : 'text-zinc-200 fill-zinc-200'} />
                 ))}
               </div>
-              <span className="text-sm text-zinc-500">{product.averageRating.toFixed(1)} ({product.reviewCount} avaliações)</span>
+              <span className="text-sm text-zinc-500">{(product.averageRating ?? 0).toFixed(1)} ({product.reviewCount} avaliações)</span>
             </a>
           )}
 
           <div className="flex items-baseline gap-3">
             <span className="text-3xl font-bold text-violet-600">{formatCurrency(currentPrice)}</span>
-            {product.comparePrice && Number(product.comparePrice) > currentPrice && (
-              <span className="text-lg text-zinc-400 line-through">{formatCurrency(Number(product.comparePrice))}</span>
+            {product.compareAtPrice && Number(product.compareAtPrice) > currentPrice && (
+              <span className="text-lg text-zinc-400 line-through">{formatCurrency(Number(product.compareAtPrice))}</span>
             )}
             {discount > 0 && (
               <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-sm font-semibold">
-                Economia de {formatCurrency(Number(product.comparePrice) - currentPrice)}
+                Economia de {formatCurrency(Number(product.compareAtPrice) - currentPrice)}
               </span>
             )}
           </div>
@@ -292,13 +293,13 @@ export default function ProductDetailClient({ product }: Props) {
                 activeTab === tab ? 'border-violet-600 text-violet-600' : 'border-transparent text-zinc-500 hover:text-zinc-700'
               )}
             >
-              {{ description: 'Descrição', specs: 'Especificações', reviews: `Avaliações (${product.reviewCount})` }[tab]}
+              {{ description: 'Descrição', specs: 'Especificações', reviews: `Avaliações (${product.reviewCount ?? 0})` }[tab]}
             </button>
           ))}
         </div>
 
         {activeTab === 'description' && (
-          <div className="prose prose-zinc max-w-none" dangerouslySetInnerHTML={{ __html: product.description }} />
+          <div className="prose prose-zinc max-w-none" dangerouslySetInnerHTML={{ __html: product.description ?? '' }} />
         )}
         {activeTab === 'specs' && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

@@ -23,7 +23,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
   const { isAuthenticated } = useAuthStore()
   const { toggleWishlist, isInWishlist } = useWishlistStore()
 
-  const discount = calculateDiscount(product.price, product.comparePrice ?? 0)
+  const discount = calculateDiscount(product.price, product.compareAtPrice ?? 0)
   const inWishlist = isInWishlist(product.id)
   const isOutOfStock = product.stock === 0
 
@@ -121,7 +121,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
         </Link>
 
         {/* Rating */}
-        {product.reviewCount > 0 && (
+        {(product.reviewCount ?? 0) > 0 && (
           <div className="flex items-center gap-1 mb-2">
             <div className="flex">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -129,7 +129,7 @@ export default function ProductCard({ product, className }: ProductCardProps) {
                   key={star}
                   size={11}
                   className={
-                    star <= Math.round(product.averageRating)
+                    star <= Math.round(product.averageRating ?? 0)
                       ? 'text-amber-400 fill-amber-400'
                       : 'text-zinc-200 fill-zinc-200'
                   }
@@ -145,9 +145,9 @@ export default function ProductCard({ product, className }: ProductCardProps) {
           <span className="text-base font-bold text-violet-600">
             {formatCurrency(product.price)}
           </span>
-          {product.comparePrice && product.comparePrice > product.price && (
+          {product.compareAtPrice && product.compareAtPrice > product.price && (
             <span className="text-xs text-zinc-400 line-through">
-              {formatCurrency(product.comparePrice)}
+              {formatCurrency(product.compareAtPrice)}
             </span>
           )}
         </div>

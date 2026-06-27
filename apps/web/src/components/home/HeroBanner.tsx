@@ -88,8 +88,8 @@ export default function HeroBanner() {
                 className="absolute inset-0"
               >
                 <Image
-                  src={banner.imageUrl}
-                  alt={banner.title}
+                  src={banner.imageUrl ?? '/placeholder.svg'}
+                  alt={banner.title ?? ''}
                   fill
                   priority={i === 0}
                   className="object-cover"
@@ -106,14 +106,14 @@ export default function HeroBanner() {
                       className="max-w-xl"
                     >
                       <h2 className="text-3xl md:text-5xl font-bold text-white mb-3 leading-tight">
-                        {banner.title}
+                        {banner.title ?? ''}
                       </h2>
                       {banner.subtitle && (
                         <p className="text-lg text-white/80 mb-8">{banner.subtitle}</p>
                       )}
-                      {banner.link && (
+                      {banner.linkUrl && (
                         <Link
-                          href={banner.link}
+                          href={banner.linkUrl}
                           className="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-violet-700 rounded-full font-bold hover:bg-violet-50 transition-all hover:scale-105 shadow-lg"
                         >
                           Ver Produtos

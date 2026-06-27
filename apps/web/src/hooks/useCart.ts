@@ -12,18 +12,17 @@ export function useCart() {
     variant?: ProductVariant
   ) => {
     store.addItem({
+      id: product.id,
       productId: product.id,
-      variantId: variant?.id ?? null,
+      variantId: variant?.id ?? undefined,
       quantity,
       name: product.name,
       slug: product.slug,
       price: variant?.price ? Number(variant.price) : Number(product.price),
-      originalPrice: Number(product.price),
-      image: product.images[0] ?? null,
-      variantName: variant?.name ?? null,
+      image: product.images[0] ?? undefined,
+      variantName: variant?.name ?? undefined,
       stock: variant ? variant.stock : product.stock,
       isDiscreet: product.isDiscreet,
-      sku: product.id,
     })
   }
 

@@ -156,7 +156,7 @@ export default function CheckoutAddress({ defaultValues, subtotal, onComplete, o
                   <input type="radio" name="shipping" value={opt.zoneId} checked={selectedZone === opt.zoneId} onChange={() => setSelectedZone(opt.zoneId)} className="accent-violet-600" />
                   <div>
                     <p className="font-medium text-zinc-900 text-sm">{opt.name}</p>
-                    <p className="text-xs text-zinc-500">{opt.estimatedDays}</p>
+                    <p className="text-xs text-zinc-500">{opt.estimatedDays ?? `${opt.deliveryDays} dia(s) úteis`}</p>
                   </div>
                 </div>
                 <span className={`font-bold text-sm ${opt.isFree ? 'text-green-600' : 'text-zinc-900'}`}>

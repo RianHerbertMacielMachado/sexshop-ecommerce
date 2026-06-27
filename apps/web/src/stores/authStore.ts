@@ -9,8 +9,8 @@ interface AuthStore {
   isLoading: boolean
   isAuthenticated: boolean
 
-  login: (email: string, password: string) => Promise<void>
-  register: (data: { name: string; email: string; password: string; phone?: string }) => Promise<void>
+  login: (email: string, password: string) => Promise<boolean>
+  register: (name: string, email: string, password: string, phone?: string) => Promise<boolean>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
   setUser: (user: User) => void
@@ -33,22 +33,24 @@ export const useAuthStore = create<AuthStore>()(
           const { user, accessToken } = data.data
           localStorage.setItem('accessToken', accessToken)
           set({ user, accessToken, isAuthenticated: true, isLoading: false })
-        } catch (error) {
+          return true
+        } catch {
           set({ isLoading: false })
-          throw error
+          return false
         }
       },
 
-      register: async (registerData) => {
+      register: async (name, email, password, phone) => {
         set({ isLoading: true })
         try {
-          const { data } = await api.post('/auth/register', registerData)
+          const { data } = await api.post('/auth/register', { name, email, password, phone })
           const { user, accessToken } = data.data
           localStorage.setItem('accessToken', accessToken)
           set({ user, accessToken, isAuthenticated: true, isLoading: false })
-        } catch (error) {
+          return true
+        } catch {
           set({ isLoading: false })
-          throw error
+          return false
         }
       },
 

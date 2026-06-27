@@ -22,7 +22,7 @@ import { useCartStore } from '@/stores/cartStore'
 import { useAuthStore } from '@/stores/authStore'
 import { useSettings } from '@/hooks/useSettings'
 import { cn } from '@/lib/utils'
-import CartDrawer from '@/components/cart/CartDrawer'
+import CartDrawer from '@/components/layout/CartDrawer'
 import MobileMenu from './MobileMenu'
 
 export default function Header() {

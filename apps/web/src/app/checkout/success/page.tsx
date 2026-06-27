@@ -76,8 +76,8 @@ export default function SuccessPage() {
                       <span className="font-medium">{formatCurrency(Number(item.price) * item.quantity)}</span>
                     </div>
                   ))}
-                  {order.items?.length > 3 && (
-                    <p className="text-xs text-zinc-400">+{order.items.length - 3} mais itens</p>
+                  {(order.items?.length ?? 0) > 3 && (
+                    <p className="text-xs text-zinc-400">+{(order.items?.length ?? 0) - 3} mais itens</p>
                   )}
                 </div>
 
