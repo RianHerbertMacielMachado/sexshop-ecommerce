@@ -176,21 +176,115 @@ export class AdminService {
   }
 
   async getSalesReport(startDate: Date, endDate: Date, groupBy: 'day' | 'week' | 'month' = 'day') {
-    const groupByFormat = groupBy === 'day' ? 'DAY' : groupBy === 'week' ? 'WEEK' : 'MONTH'
+    // Período anterior com mesma duração (para calcular trends)
+    const periodMs = endDate.getTime() - startDate.getTime()
+    const prevStart = new Date(startDate.getTime() - periodMs)
+    const prevEnd = new Date(startDate.getTime())
 
-    const data = await prisma.$queryRaw<Array<{ period: string; revenue: number; orders: number; avgOrderValue: number }>>`
-      SELECT
-        DATE_TRUNC(${groupByFormat}, created_at) as period,
-        COALESCE(SUM(CASE WHEN payment_status = 'PAID' THEN total ELSE 0 END), 0)::float as revenue,
-        COUNT(*)::int as orders,
-        COALESCE(AVG(CASE WHEN payment_status = 'PAID' THEN total ELSE NULL END), 0)::float as "avgOrderValue"
-      FROM orders
-      WHERE created_at BETWEEN ${startDate} AND ${endDate}
-      GROUP BY DATE_TRUNC(${groupByFormat}, created_at)
-      ORDER BY period ASC
-    `
+    // Busca pedidos do período atual e anterior com Prisma nativo
+    const [currentOrders, prevOrders, orderItemsWithCategory] = await Promise.all([
+      prisma.order.findMany({
+        where: { createdAt: { gte: startDate, lte: endDate } },
+        select: { createdAt: true, total: true, paymentStatus: true },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.order.findMany({
+        where: { createdAt: { gte: prevStart, lte: prevEnd } },
+        select: { total: true, paymentStatus: true },
+      }),
+      // Vendas por categoria
+      prisma.orderItem.findMany({
+        where: { order: { createdAt: { gte: startDate, lte: endDate }, paymentStatus: 'PAID' } },
+        select: {
+          price: true,
+          quantity: true,
+          product: { select: { category: { select: { name: true } } } },
+        },
+      }),
+    ])
 
-    return data
+    // Métricas do período atual
+    const paidOrders = currentOrders.filter((o) => o.paymentStatus === 'PAID')
+    const totalRevenue = paidOrders.reduce((sum, o) => sum + Number(o.total), 0)
+    const totalOrders = currentOrders.length
+    const averageTicket = paidOrders.length > 0 ? totalRevenue / paidOrders.length : 0
+    const conversionRate = totalOrders > 0 ? (paidOrders.length / totalOrders) * 100 : 0
+
+    // Métricas do período anterior (para trends)
+    const prevPaid = prevOrders.filter((o) => o.paymentStatus === 'PAID')
+    const prevRevenue = prevPaid.reduce((sum, o) => sum + Number(o.total), 0)
+    const prevTotalOrders = prevOrders.length
+    const prevTicket = prevPaid.length > 0 ? prevRevenue / prevPaid.length : 0
+    const prevConversion = prevTotalOrders > 0 ? (prevPaid.length / prevTotalOrders) * 100 : 0
+
+    const calcTrend = (curr: number, prev: number) => {
+      if (prev === 0) return curr > 0 ? 100 : 0
+      return ((curr - prev) / prev) * 100
+    }
+
+    // Agrupa receita por período (dia/semana/mês) em memória
+    const buckets = new Map<string, { revenue: number; orders: number }>()
+    for (const order of currentOrders) {
+      let key: string
+      const d = order.createdAt
+      if (groupBy === 'day') {
+        key = d.toISOString().split('T')[0] // YYYY-MM-DD
+      } else if (groupBy === 'week') {
+        // ISO week: YYYY-Www
+        const jan1 = new Date(d.getFullYear(), 0, 1)
+        const week = Math.ceil(((d.getTime() - jan1.getTime()) / 86400000 + jan1.getDay() + 1) / 7)
+        key = `${d.getFullYear()}-W${String(week).padStart(2, '0')}`
+      } else {
+        key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` // YYYY-MM
+      }
+      const bucket = buckets.get(key) ?? { revenue: 0, orders: 0 }
+      bucket.orders += 1
+      if (order.paymentStatus === 'PAID') bucket.revenue += Number(order.total)
+      buckets.set(key, bucket)
+    }
+    const revenueByPeriod = Array.from(buckets.entries())
+      .map(([date, v]) => ({ date, revenue: Math.round(v.revenue * 100) / 100, orders: v.orders }))
+      .sort((a, b) => a.date.localeCompare(b.date))
+
+    // Vendas por categoria
+    const catMap = new Map<string, number>()
+    for (const item of orderItemsWithCategory) {
+      const catName = item.product?.category?.name ?? 'Sem categoria'
+      catMap.set(catName, (catMap.get(catName) ?? 0) + Number(item.price) * (item.quantity ?? 1))
+    }
+    const salesByCategory = Array.from(catMap.entries())
+      .map(([name, revenue]) => ({ name, revenue: Math.round(revenue * 100) / 100 }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 8)
+
+    // Top produtos por receita
+    const topProductsRaw = await prisma.orderItem.groupBy({
+      by: ['productName'],
+      where: { order: { createdAt: { gte: startDate, lte: endDate }, paymentStatus: 'PAID' } },
+      _sum: { price: true },
+      _count: { productId: true },
+      orderBy: { _sum: { price: 'desc' } },
+      take: 6,
+    })
+    const topProducts = topProductsRaw.map((p) => ({
+      name: p.productName,
+      revenue: Math.round(Number(p._sum.price ?? 0) * 100) / 100,
+      orders: p._count.productId,
+    }))
+
+    return {
+      totalRevenue: Math.round(totalRevenue * 100) / 100,
+      totalOrders,
+      averageTicket: Math.round(averageTicket * 100) / 100,
+      conversionRate: Math.round(conversionRate * 10) / 10,
+      revenueTrend: Math.round(calcTrend(totalRevenue, prevRevenue) * 10) / 10,
+      ordersTrend: Math.round(calcTrend(totalOrders, prevTotalOrders) * 10) / 10,
+      ticketTrend: Math.round(calcTrend(averageTicket, prevTicket) * 10) / 10,
+      conversionTrend: Math.round(calcTrend(conversionRate, prevConversion) * 10) / 10,
+      revenueByPeriod,
+      salesByCategory,
+      topProducts,
+    }
   }
 
   async getProductsReport() {

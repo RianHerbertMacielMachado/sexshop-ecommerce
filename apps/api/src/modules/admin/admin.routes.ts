@@ -54,8 +54,29 @@ router.get('/customers/:id', asyncHandler(async (req, res) => {
 
 // Reports
 router.get('/reports/sales', asyncHandler(async (req, res) => {
-  const { startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), endDate = new Date().toISOString(), groupBy = 'day' } = req.query as Record<string, string>
-  const data = await adminService.getSalesReport(new Date(startDate), new Date(endDate), groupBy as 'day' | 'week' | 'month')
+  const { startDate, endDate, groupBy, period } = req.query as Record<string, string>
+
+  // Suporta ?period=30 (dias) ou ?startDate=...&endDate=...
+  let start: Date
+  let end: Date = new Date()
+
+  if (period) {
+    const days = parseInt(period, 10) || 30
+    start = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+  } else {
+    start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    end = endDate ? new Date(endDate) : new Date()
+  }
+
+  // groupBy automático baseado no período
+  let resolvedGroupBy: 'day' | 'week' | 'month' = (groupBy as 'day' | 'week' | 'month') || 'day'
+  if (!groupBy && period) {
+    const days = parseInt(period, 10) || 30
+    if (days > 180) resolvedGroupBy = 'month'
+    else if (days > 60) resolvedGroupBy = 'week'
+  }
+
+  const data = await adminService.getSalesReport(start, end, resolvedGroupBy)
   res.json({ success: true, message: 'Relatório gerado', data })
 }))
 
