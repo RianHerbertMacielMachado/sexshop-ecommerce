@@ -36,8 +36,8 @@ export default function AdminSettingsPage() {
   const { data: settings, isLoading } = useQuery({
     queryKey: ['admin-settings'],
     queryFn: async () => {
-      const res = await api.get('/settings')
-      return res.data.data as SiteSettings
+      const res = await api.get('/settings/admin')
+      return res.data.data.settings as SiteSettings
     },
   })
 
@@ -55,7 +55,7 @@ export default function AdminSettingsPage() {
   }, [settings, reset])
 
   const mutation = useMutation({
-    mutationFn: (data: SettingsFormData) => api.put('/settings', data),
+    mutationFn: (data: SettingsFormData) => api.put('/settings/admin', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-settings'] })
       queryClient.invalidateQueries({ queryKey: ['settings'] })
