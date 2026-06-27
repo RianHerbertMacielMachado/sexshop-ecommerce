@@ -11,9 +11,9 @@ export default function TestimonialsSection() {
   const [current, setCurrent] = useState(0)
 
   const { data: reviews = [] } = useQuery({
-    queryKey: ['reviews', 'approved'],
+    queryKey: ['reviews', 'featured'],
     queryFn: async () => {
-      const { data } = await api.get('/admin/reviews?isApproved=true&limit=10')
+      const { data } = await api.get('/reviews/featured?limit=10')
       return data.data.reviews as Array<{
         id: string
         rating: number

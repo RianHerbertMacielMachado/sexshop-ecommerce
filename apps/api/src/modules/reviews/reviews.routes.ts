@@ -19,6 +19,17 @@ router.post('/products/:productId/reviews', optionalAuth, asyncHandler(async (re
   res.status(201).json({ success: true, message: 'Avaliação enviada para moderação' })
 }))
 
+// Rota pública: retorna reviews aprovadas para exibição na homepage
+router.get('/reviews/featured', asyncHandler(async (req, res) => {
+  const limit = parseInt(req.query.limit as string || '10', 10)
+  const result = await reviewsService.listAll({
+    page: 1,
+    limit,
+    isApproved: true,
+  })
+  res.json({ success: true, message: 'Avaliações listadas', data: result })
+}))
+
 router.get('/admin/reviews', authMiddleware, isAdmin, asyncHandler(async (req, res) => {
   const result = await reviewsService.listAll({
     page: parseInt(req.query.page as string || '1', 10),
