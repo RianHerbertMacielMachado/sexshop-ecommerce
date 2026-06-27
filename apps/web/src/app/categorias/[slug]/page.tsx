@@ -101,9 +101,6 @@ function CategoryContent() {
               transition={{ duration: 0.35 }}
             >
               <h1 className="text-2xl md:text-3xl font-bold text-zinc-900">{categoryName}</h1>
-              {category?.description && (
-                <p className="text-zinc-500 mt-1 max-w-2xl">{category.description}</p>
-              )}
               {!isLoading && (
                 <p className="text-zinc-400 text-sm mt-2">
                   {total} produto{total !== 1 ? 's' : ''} encontrado{total !== 1 ? 's' : ''}
