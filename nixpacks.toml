@@ -1,0 +1,13 @@
+# nixpacks.toml — raiz do monorepo
+# Usado pelo serviço WEB no Railway (Nixpacks builder)
+# O serviço API deve ter Start Command: npm run start:api
+# (configurado no dashboard Railway → Settings → Deploy → Start Command)
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build --workspace=apps/web"]
+
+[start]
+cmd = "npm run start --workspace=apps/web"
