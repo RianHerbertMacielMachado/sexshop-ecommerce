@@ -1,0 +1,43 @@
+# .dockerignore — raiz do monorepo
+# Exclui apenas o que não deve ir para o build context do Docker
+
+# Dependências (reinstaladas no build)
+node_modules
+**/node_modules
+
+# Builds gerados (rebuilt no Docker)
+.next
+**/dist
+**/build
+**/out
+**/.next
+
+# Ambiente local
+.env.local
+**/.env.local
+.env.*.local
+**/.env.*.local
+
+# Logs
+*.log
+**/logs
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+*.swp
+
+# Turbo cache
+.turbo
+**/.turbo
+
+# Testes
+coverage
+**/coverage
+
+# Backups
+*.tar.gz
+*.bak
+*.backup

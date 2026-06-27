@@ -1,6 +1,7 @@
 # ============================================================
 # Dockerfile para o Web
-# Railway Root Directory: / (raiz do monorepo)
+# Build context: raiz do monorepo (/)
+# Dockerfile Path configurado no Railway: apps/web/Dockerfile
 # ============================================================
 
 # ============================================================
@@ -12,11 +13,9 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-# Copia arquivos de dependências do monorepo
 COPY package*.json ./
 COPY apps/web/package*.json ./apps/web/
 
-# Instala todas as dependências
 RUN npm ci --workspace=apps/web --include-workspace-root
 
 # ============================================================
@@ -29,11 +28,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 
-# Copia o código do app
 COPY package*.json ./
 COPY apps/web ./apps/web/
 
-# Variáveis de build (injetadas pelo Railway em build time)
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 ARG NEXT_PUBLIC_MP_PUBLIC_KEY
@@ -60,17 +57,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
 
-# Copia arquivos estáticos públicos
 COPY --from=builder /app/apps/web/public ./public
-
-# Copia o build standalone do Next.js
 COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 
 USER nextjs
 
 EXPOSE 3000
-
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
