@@ -7,18 +7,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ============================================================
-// ENUMS
-// ============================================================
-
 enum UserRole {
-  ADMIN
   CUSTOMER
+  ADMIN
 }
 
 enum OrderStatus {
   PENDING
-  PAID
+  CONFIRMED
   PROCESSING
   SHIPPED
   DELIVERED
@@ -31,55 +27,54 @@ enum PaymentStatus {
   PAID
   FAILED
   REFUNDED
+  CANCELLED
 }
 
 enum CouponType {
   PERCENTAGE
   FIXED
+  FREE_SHIPPING
 }
 
 enum PaymentMethodType {
-  STRIPE_CARD
+  STRIPE
   PIX
   BOLETO
-  MANUAL
 }
 
 enum BannerPosition {
   HOME_HERO
   HOME_MIDDLE
   HOME_BOTTOM
+  CATEGORY_TOP
   SIDEBAR
 }
 
-// ============================================================
-// MODELS
-// ============================================================
-
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  password      String
-  role          UserRole  @default(CUSTOMER)
-  isActive      Boolean   @default(true)
-  emailVerified Boolean   @default(false)
-  phone         String?
-  cpf           String?
-  birthDate     DateTime?
-  loyaltyPoints Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  password       String
+  phone          String?
+  cpf            String?   @unique
+  birthDate      DateTime?
+  role           UserRole  @default(CUSTOMER)
+  isActive       Boolean   @default(true)
+  emailVerified  Boolean   @default(false)
+  loyaltyPoints  Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  addresses     Address[]
-  orders        Order[]
-  reviews       Review[]
-  wishlist      Wishlist[]
-  refreshTokens RefreshToken[]
+  addresses      Address[]
+  orders         Order[]
+  reviews        Review[]
+  wishlist       Wishlist[]
+  refreshTokens  RefreshToken[]
+  auditLogs      AuditLog[]
+  passwordResets PasswordResetToken[]
 
   @@index([email])
-  @@index([role, isActive])
-  @@map("users")
+  @@index([role])
 }
 
 model RefreshToken {
@@ -88,196 +83,170 @@ model RefreshToken {
   userId    String
   expiresAt DateTime
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
   @@index([token])
-  @@map("refresh_tokens")
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
 }
 
 model Address {
-  id           String   @id @default(cuid())
-  userId       String
-  name         String
-  street       String
-  number       String
-  complement   String?
-  neighborhood String
-  city         String
-  state        String
-  zipCode      String
-  isDefault    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String   @id @default(cuid())
+  userId        String
+  label         String?
+  recipientName String?
+  street        String
+  number        String
+  complement    String?
+  neighborhood  String
+  city          String
+  state         String
+  zipCode       String
+  isDefault     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@map("addresses")
 }
 
 model Category {
-  id              String    @id @default(cuid())
+  id              String     @id @default(cuid())
   name            String
-  slug            String    @unique
+  slug            String     @unique
   description     String?
   imageUrl        String?
-  isActive        Boolean   @default(true)
   parentId        String?
-  order           Int       @default(0)
+  isActive        Boolean    @default(true)
+  order           Int        @default(0)
   metaTitle       String?
   metaDescription String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children Category[] @relation("CategoryHierarchy")
-  products Product[]
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  parent          Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
+  children        Category[] @relation("CategoryChildren")
+  products        Product[]
 
   @@index([slug])
   @@index([parentId])
-  @@index([isActive, order])
-  @@map("categories")
 }
 
 model Product {
-  id               String   @id @default(cuid())
-  name             String
-  slug             String   @unique
-  description      String
-  shortDescription String?
-  price            Decimal  @db.Decimal(10, 2)
-  comparePrice     Decimal? @db.Decimal(10, 2)
-  costPrice        Decimal? @db.Decimal(10, 2)
-  sku              String   @unique
-  stock            Int      @default(0)
-  weight           Float?
-  images           Json     @default("[]")
-  categoryId       String
-  isActive         Boolean  @default(true)
-  isFeatured       Boolean  @default(false)
-  isDiscreet       Boolean  @default(false)
-  metaTitle        String?
-  metaDescription  String?
-  tags             String[]
-  soldCount        Int      @default(0)
-  averageRating    Float    @default(0)
-  reviewCount      Int      @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id              String           @id @default(cuid())
+  name            String
+  slug            String           @unique
+  description     String?
+  price           Decimal          @db.Decimal(10, 2)
+  compareAtPrice  Decimal?         @db.Decimal(10, 2)
+  sku             String           @unique
+  stock           Int              @default(0)
+  weight          Decimal?         @db.Decimal(8, 3)
+  images          String[]
+  categoryId      String
+  isActive        Boolean          @default(true)
+  isFeatured      Boolean          @default(false)
+  isDiscreet      Boolean          @default(false)
+  tags            String[]
+  metaTitle       String?
+  metaDescription String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  category        Category         @relation(fields: [categoryId], references: [id])
+  variants        ProductVariant[]
+  orderItems      OrderItem[]
+  reviews         Review[]
+  wishlist        Wishlist[]
 
-  category   Category         @relation(fields: [categoryId], references: [id])
-  variants   ProductVariant[]
-  orderItems OrderItem[]
-  reviews    Review[]
-  wishlist   Wishlist[]
-
-  @@index([categoryId])
   @@index([slug])
-  @@index([isActive, isFeatured])
-  @@index([isActive, createdAt])
-  @@index([soldCount])
-  @@map("products")
+  @@index([categoryId])
+  @@index([isActive])
+  @@index([isFeatured])
+  @@index([sku])
 }
 
 model ProductVariant {
   id        String   @id @default(cuid())
   productId String
   name      String
-  options   Json
+  value     String
   price     Decimal? @db.Decimal(10, 2)
   stock     Int      @default(0)
   sku       String?
-  imageUrl  String?
   isActive  Boolean  @default(true)
-
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([productId])
-  @@map("product_variants")
 }
 
 model Order {
-  id                    String        @id @default(cuid())
-  orderNumber           String        @unique
-  userId                String?
-  guestEmail            String?
-  guestName             String?
-  status                OrderStatus   @default(PENDING)
-  paymentStatus         PaymentStatus @default(PENDING)
-  paymentMethod         String
-  paymentId             String?
-  stripeSessionId       String?
-  stripePaymentIntentId String?
-  mpPaymentId           String?
-  subtotal              Decimal       @db.Decimal(10, 2)
-  discount              Decimal       @default(0) @db.Decimal(10, 2)
-  shippingCost          Decimal       @default(0) @db.Decimal(10, 2)
-  total                 Decimal       @db.Decimal(10, 2)
-  couponId              String?
-  couponCode            String?
-  notes                 String?
-  trackingCode          String?
-  isDiscreetPackaging   Boolean       @default(false)
-  estimatedDelivery     DateTime?
-  paidAt                DateTime?
-  shippedAt             DateTime?
-  deliveredAt           DateTime?
-  cancelledAt           DateTime?
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
+  id                  String               @id @default(cuid())
+  orderNumber         String               @unique
+  userId              String?
+  guestName           String?
+  guestEmail          String?
+  status              OrderStatus          @default(PENDING)
+  paymentStatus       PaymentStatus        @default(PENDING)
+  paymentMethod       String?
+  stripeSessionId     String?
+  mpPaymentId         String?
+  subtotal            Decimal              @db.Decimal(10, 2)
+  discountAmount      Decimal              @default(0) @db.Decimal(10, 2)
+  shippingCost        Decimal              @default(0) @db.Decimal(10, 2)
+  total               Decimal              @db.Decimal(10, 2)
+  couponCode          String?
+  trackingCode        String?
+  isDiscreetPackaging Boolean              @default(false)
+  notes               String?
+  paidAt              DateTime?
+  shippedAt           DateTime?
+  deliveredAt         DateTime?
+  cancelledAt         DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  user                User?                @relation(fields: [userId], references: [id])
+  items               OrderItem[]
+  shippingAddress     ShippingAddress?
+  statusHistory       OrderStatusHistory[]
 
-  user            User?                @relation(fields: [userId], references: [id])
-  items           OrderItem[]
-  shippingAddress ShippingAddress?
-  coupon          Coupon?              @relation(fields: [couponId], references: [id])
-  statusHistory   OrderStatusHistory[]
-
+  @@index([orderNumber])
   @@index([userId])
   @@index([status])
   @@index([paymentStatus])
-  @@index([orderNumber])
   @@index([createdAt])
-  @@index([stripeSessionId])
-  @@index([mpPaymentId])
-  @@map("orders")
-}
-
-model OrderStatusHistory {
-  id        String   @id @default(cuid())
-  orderId   String
-  status    String
-  comment   String?
-  createdAt DateTime @default(now())
-
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  @@index([orderId])
-  @@map("order_status_history")
 }
 
 model OrderItem {
-  id           String   @id @default(cuid())
-  orderId      String
-  productId    String?
-  variantId    String?
-  quantity     Int
-  price        Decimal  @db.Decimal(10, 2)
-  productName  String
-  productImage String?
-  variantName  String?
-
-  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product? @relation(fields: [productId], references: [id])
+  id          String   @id @default(cuid())
+  orderId     String
+  productId   String
+  productName String
+  variantName String?
+  quantity    Int
+  price       Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
 
   @@index([orderId])
   @@index([productId])
-  @@map("order_items")
 }
 
 model ShippingAddress {
-  id            String  @id @default(cuid())
-  orderId       String  @unique
+  id            String   @id @default(cuid())
+  orderId       String   @unique
   recipientName String
   street        String
   number        String
@@ -286,113 +255,103 @@ model ShippingAddress {
   city          String
   state         String
   zipCode       String
-  phone         String?
+  createdAt     DateTime @default(now())
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
 
-  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  status    OrderStatus
+  comment   String?
+  createdAt DateTime    @default(now())
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
-  @@map("shipping_addresses")
+  @@index([orderId])
 }
 
 model Coupon {
-  id               String     @id @default(cuid())
-  code             String     @unique
-  type             CouponType
-  value            Decimal    @db.Decimal(10, 2)
-  minOrderValue    Decimal?   @db.Decimal(10, 2)
-  maxDiscountValue Decimal?   @db.Decimal(10, 2)
-  maxUses          Int?
-  usedCount        Int        @default(0)
-  expiresAt        DateTime?
-  isActive         Boolean    @default(true)
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-
-  orders Order[]
+  id              String     @id @default(cuid())
+  code            String     @unique
+  type            CouponType
+  value           Decimal    @db.Decimal(10, 2)
+  minOrderAmount  Decimal?   @db.Decimal(10, 2)
+  maxUses         Int?
+  usedCount       Int        @default(0)
+  expiresAt       DateTime?
+  isActive        Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   @@index([code])
-  @@index([isActive])
-  @@map("coupons")
 }
 
 model PaymentMethod {
-  id           String            @id @default(cuid())
-  name         String
-  type         PaymentMethodType
-  isActive     Boolean           @default(true)
-  config       Json              @default("{}")
-  instructions String?
-  icon         String?
-  order        Int               @default(0)
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
-
-  @@index([type, isActive])
-  @@map("payment_methods")
+  id          String            @id @default(cuid())
+  name        String
+  type        PaymentMethodType
+  isActive    Boolean           @default(true)
+  config      Json?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
 }
 
 model SiteSettings {
-  id                   String   @id @default("singleton")
-  storeName            String
-  storeDescription     String?
-  storeEmail           String?
-  storePhone           String?
-  storeWhatsapp        String?
-  storeCNPJ            String?
-  logoUrl              String?
-  faviconUrl           String?
-  primaryColor         String   @default("#7c3aed")
-  secondaryColor       String   @default("#db2777")
-  socialLinks          Json     @default("{}")
-  seoTitle             String?
-  seoDescription       String?
-  seoKeywords          String?
-  maintenanceMode      Boolean  @default(false)
-  maintenanceMessage   String?
+  id                    String   @id @default(cuid())
+  storeName             String   @default("SexShop")
+  storeDescription      String?
+  storeEmail            String   @default("contato@sexshop.com")
+  storePhone            String?
+  storeCnpj             String?
+  logoUrl               String?
+  faviconUrl            String?
   freeShippingThreshold Decimal? @db.Decimal(10, 2)
-  footerText           String?
-  privacyPolicy        String?  @db.Text
-  termsOfService       String?  @db.Text
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  @@map("site_settings")
+  maintenanceMode       Boolean  @default(false)
+  allowGuestCheckout    Boolean  @default(true)
+  metaTitle             String?
+  metaDescription       String?
+  primaryColor          String?
+  updatedAt             DateTime @updatedAt
 }
 
 model Banner {
   id             String         @id @default(cuid())
-  title          String
+  title          String?
   subtitle       String?
-  imageUrl       String
+  imageUrl       String?
   mobileImageUrl String?
-  link           String?
-  position       BannerPosition
+  linkUrl        String?
+  linkText       String?
+  position       BannerPosition @default(HOME_HERO)
   isActive       Boolean        @default(true)
   order          Int            @default(0)
-  startDate      DateTime?
-  endDate        DateTime?
+  startsAt       DateTime?
+  endsAt         DateTime?
   createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
-  @@index([position, isActive, order])
-  @@map("banners")
+  @@index([position])
+  @@index([isActive])
 }
 
 model Review {
-  id          String   @id @default(cuid())
-  productId   String
-  userId      String?
-  guestName   String?
-  rating      Int
-  comment     String?
-  isApproved  Boolean  @default(false)
-  adminReply  String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(cuid())
+  productId  String
+  userId     String
+  rating     Int
+  title      String?
+  comment    String?
+  isApproved Boolean  @default(false)
+  adminReply String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user    User?   @relation(fields: [userId], references: [id])
-
-  @@index([productId, isApproved])
+  @@unique([productId, userId])
+  @@index([productId])
   @@index([userId])
-  @@map("reviews")
+  @@index([isApproved])
 }
 
 model Wishlist {
@@ -400,55 +359,39 @@ model Wishlist {
   userId    String
   productId String
   createdAt DateTime @default(now())
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
   @@index([userId])
-  @@map("wishlists")
 }
 
 model ShippingZone {
-  id            String   @id @default(cuid())
-  name          String
-  states        String[]
-  price         Decimal  @db.Decimal(10, 2)
-  freeAbove     Decimal? @db.Decimal(10, 2)
-  estimatedDays String
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-
-  @@map("shipping_zones")
+  id                    String   @id @default(cuid())
+  name                  String
+  states                String[]
+  price                 Decimal  @db.Decimal(10, 2)
+  deliveryDays          Int
+  freeShippingThreshold Decimal? @db.Decimal(10, 2)
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }
 
 model AuditLog {
   id         String   @id @default(cuid())
-  userId     String
+  userId     String?
   action     String
-  entity     String
-  entityId   String?
-  oldValues  Json?
-  newValues  Json?
-  ipAddress  String?
+  resource   String
+  resourceId String?
+  oldData    Json?
+  newData    Json?
+  ip         String?
   userAgent  String?
   createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
 
   @@index([userId])
-  @@index([entity, entityId])
+  @@index([resource])
   @@index([createdAt])
-  @@map("audit_logs")
-}
-
-model PasswordResetToken {
-  id        String   @id @default(cuid())
-  userId    String
-  token     String   @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime @default(now())
-
-  @@index([token])
-  @@index([userId])
-  @@map("password_reset_tokens")
 }

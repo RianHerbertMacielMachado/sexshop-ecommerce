@@ -1,15 +1,14 @@
 import { z } from 'zod'
 
 const addressSchema = z.object({
-  recipientName: z.string().min(2).max(100),
-  street: z.string().min(2).max(200),
-  number: z.string().min(1).max(20),
-  complement: z.string().max(100).optional().nullable(),
-  neighborhood: z.string().min(2).max(100),
-  city: z.string().min(2).max(100),
-  state: z.string().length(2, 'Estado deve ter 2 caracteres (ex: SP)'),
-  zipCode: z.string().regex(/^\d{5}-?\d{3}$/, 'CEP inválido'),
-  phone: z.string().optional().nullable(),
+  recipientName: z.string().min(2),
+  street: z.string().min(3),
+  number: z.string().min(1),
+  complement: z.string().optional(),
+  neighborhood: z.string().min(2),
+  city: z.string().min(2),
+  state: z.string().length(2),
+  zipCode: z.string().min(8).max(9),
 })
 
 export const createOrderSchema = z.object({
@@ -18,44 +17,65 @@ export const createOrderSchema = z.object({
       .array(
         z.object({
           productId: z.string().cuid(),
-          variantId: z.string().cuid().optional().nullable(),
-          quantity: z.number().int().min(1).max(100),
+          variantId: z.string().cuid().optional(),
+          quantity: z.number().int().positive(),
         })
       )
-      .min(1, 'Pedido deve ter pelo menos 1 item'),
+      .min(1),
     shippingAddress: addressSchema,
-    couponCode: z.string().optional().nullable(),
-    shippingZoneId: z.string().cuid().optional().nullable(),
-    isDiscreetPackaging: z.boolean().default(false),
-    paymentMethod: z.string().min(1),
-    guestEmail: z.string().email().optional().nullable(),
-    guestName: z.string().min(2).max(100).optional().nullable(),
-    notes: z.string().max(500).optional().nullable(),
+    shippingZoneId: z.string().cuid(),
+    couponCode: z.string().optional(),
+    paymentMethod: z.enum(['STRIPE', 'PIX', 'BOLETO']),
+    isDiscreetPackaging: z.boolean().optional().default(false),
+    notes: z.string().optional(),
+    guestName: z.string().optional(),
+    guestEmail: z.string().email().optional(),
   }),
+  query: z.object({}).optional(),
+  params: z.object({}).optional(),
 })
 
 export const updateOrderStatusSchema = z.object({
-  params: z.object({ id: z.string().cuid() }),
   body: z.object({
-    status: z.enum(['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED']),
-    comment: z.string().max(500).optional(),
-    trackingCode: z.string().max(100).optional().nullable(),
+    status: z.enum([
+      'PENDING',
+      'CONFIRMED',
+      'PROCESSING',
+      'SHIPPED',
+      'DELIVERED',
+      'CANCELLED',
+      'REFUNDED',
+    ]),
+    comment: z.string().optional(),
+    trackingCode: z.string().optional(),
+  }),
+  query: z.object({}).optional(),
+  params: z.object({
+    id: z.string().cuid(),
   }),
 })
 
 export const listOrdersSchema = z.object({
+  body: z.object({}).optional(),
   query: z.object({
-    page: z.string().optional().transform((v) => (v ? parseInt(v, 10) : 1)),
-    limit: z.string().optional().transform((v) => (v ? Math.min(parseInt(v, 10), 100) : 20)),
-    status: z
-      .enum(['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED', 'REFUNDED'])
-      .optional(),
+    page: z.coerce.number().int().positive().optional().default(1),
+    limit: z.coerce.number().int().positive().optional().default(10),
     search: z.string().optional(),
+    status: z
+      .enum([
+        'PENDING',
+        'CONFIRMED',
+        'PROCESSING',
+        'SHIPPED',
+        'DELIVERED',
+        'CANCELLED',
+        'REFUNDED',
+      ])
+      .optional(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
-    minValue: z.string().optional().transform((v) => (v ? parseFloat(v) : undefined)),
-    maxValue: z.string().optional().transform((v) => (v ? parseFloat(v) : undefined)),
   }),
+  params: z.object({}).optional(),
 })
 
 export type CreateOrderInput = z.infer<typeof createOrderSchema>['body']

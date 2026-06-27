@@ -21,12 +21,22 @@ import {
 } from '@/components/ui/select'
 import type { Banner } from '@/types'
 
+const BANNER_POSITIONS = [
+  'HOME_HERO',
+  'HOME_MIDDLE',
+  'HOME_BOTTOM',
+  'CATEGORY_TOP',
+  'SIDEBAR',
+] as const
+
+type BannerPositionType = (typeof BANNER_POSITIONS)[number]
+
 const bannerSchema = z.object({
   title: z.string().optional(),
   subtitle: z.string().optional(),
   linkUrl: z.string().optional(),
   linkText: z.string().optional(),
-  position: z.enum(['HOME_HERO', 'HOME_MIDDLE', 'HOME_BOTTOM', 'CATEGORY_TOP']),
+  position: z.enum(BANNER_POSITIONS),
   isActive: z.boolean().optional(),
   order: z.coerce.number().optional(),
   startsAt: z.string().optional(),
@@ -34,6 +44,14 @@ const bannerSchema = z.object({
 })
 
 type BannerFormData = z.infer<typeof bannerSchema>
+
+const POSITION_LABELS: Record<BannerPositionType, string> = {
+  HOME_HERO: 'Hero Principal',
+  HOME_MIDDLE: 'Meio da Home',
+  HOME_BOTTOM: 'Rodapé da Home',
+  CATEGORY_TOP: 'Topo de Categoria',
+  SIDEBAR: 'Sidebar',
+}
 
 interface Props {
   isOpen: boolean
@@ -46,7 +64,14 @@ export default function BannerFormModal({ isOpen, onClose, banner }: Props) {
   const isEditing = !!banner
   const fileRef = useRef<HTMLInputElement>(null)
 
-  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<BannerFormData>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<BannerFormData>({
     resolver: zodResolver(bannerSchema),
   })
 
@@ -57,11 +82,15 @@ export default function BannerFormModal({ isOpen, onClose, banner }: Props) {
         subtitle: banner?.subtitle ?? '',
         linkUrl: banner?.linkUrl ?? '',
         linkText: banner?.linkText ?? '',
-        position: banner?.position ?? 'HOME_HERO',
+        position: (banner?.position as BannerPositionType) ?? 'HOME_HERO',
         isActive: banner?.isActive ?? true,
         order: banner?.order ?? 0,
-        startsAt: banner?.startsAt ? new Date(banner.startsAt).toISOString().slice(0, 16) : '',
-        endsAt: banner?.endsAt ? new Date(banner.endsAt).toISOString().slice(0, 16) : '',
+        startsAt: banner?.startsAt
+          ? new Date(banner.startsAt).toISOString().slice(0, 16)
+          : '',
+        endsAt: banner?.endsAt
+          ? new Date(banner.endsAt).toISOString().slice(0, 16)
+          : '',
       })
     }
   }, [isOpen, banner, reset])
@@ -100,12 +129,18 @@ export default function BannerFormModal({ isOpen, onClose, banner }: Props) {
           <h2 className="text-lg font-semibold">
             {isEditing ? 'Editar Banner' : 'Novo Banner'}
           </h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="p-6 space-y-4">
+        <form
+          onSubmit={handleSubmit((data) => mutation.mutate(data))}
+          className="p-6 space-y-4"
+        >
           {/* Image upload */}
           <div className="space-y-1">
             <Label>Imagem do Banner</Label>
@@ -114,10 +149,19 @@ export default function BannerFormModal({ isOpen, onClose, banner }: Props) {
               onClick={() => fileRef.current?.click()}
             >
               <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">Clique para enviar imagem</p>
-              <p className="text-xs text-muted-foreground mt-1">PNG, JPG, WebP (recomendado: 1920×600)</p>
+              <p className="text-sm text-muted-foreground">
+                Clique para enviar imagem
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                PNG, JPG, WebP (recomendado: 1920×600)
+              </p>
             </div>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" />
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -133,41 +177,66 @@ export default function BannerFormModal({ isOpen, onClose, banner }: Props) {
 
             <div className="space-y-1">
               <Label htmlFor="linkUrl">URL do Link</Label>
-              <Input id="linkUrl" {...register('linkUrl')} placeholder="/produtos/categoria" />
+              <Input
+                id="linkUrl"
+                {...register('linkUrl')}
+                placeholder="/produtos/categoria"
+              />
             </div>
 
             <div className="space-y-1">
               <Label htmlFor="linkText">Texto do Botão</Label>
-              <Input id="linkText" {...register('linkText')} placeholder="Ver Produtos" />
+              <Input
+                id="linkText"
+                {...register('linkText')}
+                placeholder="Ver Produtos"
+              />
             </div>
           </div>
 
+          {/* Position */}
           <div className="space-y-1">
             <Label>Posição *</Label>
             <Select
               value={watch('position')}
-              onValueChange={(v) => setValue('position', v as BannerFormData['position'])}
+              onValueChange={(v) =>
+                setValue('position', v as BannerPositionType)
+              }
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="HOME_HERO">Hero Principal</SelectItem>
-                <SelectItem value="HOME_MIDDLE">Meio da Home</SelectItem>
-                <SelectItem value="HOME_BOTTOM">Rodapé da Home</SelectItem>
-                <SelectItem value="CATEGORY_TOP">Topo de Categoria</SelectItem>
+                {BANNER_POSITIONS.map((pos) => (
+                  <SelectItem key={pos} value={pos}>
+                    {POSITION_LABELS[pos]}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
+            {errors.position && (
+              <p className="text-xs text-destructive">
+                {errors.position.message}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label htmlFor="startsAt">Início</Label>
-              <Input id="startsAt" type="datetime-local" {...register('startsAt')} />
+              <Input
+                id="startsAt"
+                type="datetime-local"
+                {...register('startsAt')}
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="endsAt">Fim</Label>
-              <Input id="endsAt" type="datetime-local" {...register('endsAt')} />
+              <Input
+                id="endsAt"
+                type="datetime-local"
+                {...register('endsAt')}
+              />
             </div>
           </div>
 
@@ -186,11 +255,22 @@ export default function BannerFormModal({ isOpen, onClose, banner }: Props) {
           </div>
 
           <div className="flex gap-3 pt-2">
-            <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1"
+              onClick={onClose}
+            >
               Cancelar
             </Button>
-            <Button type="submit" className="flex-1" disabled={mutation.isPending}>
-              {mutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={mutation.isPending}
+            >
+              {mutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
               {isEditing ? 'Salvar' : 'Criar'}
             </Button>
           </div>

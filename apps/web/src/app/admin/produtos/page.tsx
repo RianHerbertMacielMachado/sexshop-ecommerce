@@ -129,12 +129,13 @@ export default function AdminProductsPage() {
                         <div className="h-10 w-10 rounded-lg overflow-hidden bg-muted shrink-0">
                           {product.images?.[0] ? (
                             <Image
-                              src={product.images[0]}
-                              alt={product.name}
-                              width={40}
-                              height={40}
-                              className="object-cover w-full h-full"
+                                src={product.images?.[0] || '/placeholder.svg'}
+                                alt={product.name}
+                                width={40}
+                                height={40}
+                                className="object-cover w-full h-full"
                             />
+
                           ) : (
                             <div className="h-full w-full flex items-center justify-center">
                               <ImageIcon className="h-4 w-4 text-muted-foreground" />

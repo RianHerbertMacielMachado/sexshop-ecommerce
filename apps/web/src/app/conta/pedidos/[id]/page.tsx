@@ -98,12 +98,13 @@ export default function OrderDetailPage({
             <div key={item.id} className="flex gap-4">
               <div className="relative h-16 w-16 rounded-lg overflow-hidden bg-muted shrink-0">
                 {item.product?.images?.[0] ? (
-                  <Image
-                    src={item.product.images[0]}
-                    alt={item.productName}
-                    fill
-                    className="object-cover"
-                  />
+                    <Image
+                        src={item.product?.images?.[0] || '/placeholder.svg'}
+                        alt={item.productName}
+                        fill
+                        className="object-cover"
+                    />
+
                 ) : (
                   <div className="h-full w-full flex items-center justify-center">
                     <Package className="h-6 w-6 text-muted-foreground" />

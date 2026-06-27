@@ -54,17 +54,13 @@ export default function ProductCard({ product, className }: ProductCardProps) {
       <Link href={`/produtos/${product.slug}`}>
         <div className="relative aspect-square overflow-hidden bg-zinc-100">
           {product.images[0] ? (
-            <Image
-              src={product.images[0]}
-              alt={product.name}
-              fill
-              className={cn(
-                'object-cover transition-all duration-500 group-hover:scale-105',
-                imageLoaded ? 'opacity-100' : 'opacity-0'
-              )}
-              onLoad={() => setImageLoaded(true)}
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            />
+          <Image
+            src={product.images?.[0] || '/placeholder.svg'}
+            alt={product.name}
+            fill
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-zinc-200 to-zinc-100 flex items-center justify-center">
               <ShoppingCart size={32} className="text-zinc-400" />

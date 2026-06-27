@@ -83,12 +83,12 @@ export default function AdminBannersPage() {
             >
               <div className="relative h-36 bg-muted">
                 {banner.imageUrl ? (
-                  <Image
-                    src={banner.imageUrl}
-                    alt={banner.title || 'Banner'}
-                    fill
-                    className="object-cover"
-                  />
+                    <Image
+                        src={banner.imageUrl || '/placeholder.svg'}
+                        alt={banner.title || 'Banner'}
+                        fill
+                        className="object-cover"
+                    />
                 ) : (
                   <div className="h-full flex items-center justify-center">
                     <ImageIcon className="h-10 w-10 text-muted-foreground" />

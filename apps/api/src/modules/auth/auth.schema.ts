@@ -2,71 +2,72 @@ import { z } from 'zod'
 
 export const registerSchema = z.object({
   body: z.object({
-    name: z
-      .string()
-      .min(2, 'Nome deve ter no mínimo 2 caracteres')
-      .max(100, 'Nome deve ter no máximo 100 caracteres')
-      .trim(),
-    email: z.string().email('E-mail inválido').toLowerCase().trim(),
+    name: z.string().min(2).max(100),
+    email: z.string().email(),
     password: z
       .string()
-      .min(8, 'Senha deve ter no mínimo 8 caracteres')
-      .regex(/[A-Z]/, 'Senha deve conter pelo menos uma letra maiúscula')
-      .regex(/[0-9]/, 'Senha deve conter pelo menos um número'),
+      .min(8)
+      .regex(/[A-Z]/, 'Deve conter uma letra maiúscula')
+      .regex(/[0-9]/, 'Deve conter um número'),
     phone: z
       .string()
-      .regex(/^\(?[1-9]{2}\)?\s?9?\d{4}-?\d{4}$/, 'Telefone inválido')
+      .regex(/^\(\d{2}\)\s\d{4,5}-\d{4}$/)
       .optional(),
     cpf: z
       .string()
-      .regex(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/, 'CPF inválido')
+      .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/)
       .optional(),
   }),
+  query: z.object({}).optional(),
+  params: z.object({}).optional(),
 })
 
 export const loginSchema = z.object({
   body: z.object({
-    email: z.string().email('E-mail inválido').toLowerCase().trim(),
-    password: z.string().min(1, 'Senha é obrigatória'),
+    email: z.string().email(),
+    password: z.string().min(1),
   }),
+  query: z.object({}).optional(),
+  params: z.object({}).optional(),
 })
 
 export const forgotPasswordSchema = z.object({
   body: z.object({
-    email: z.string().email('E-mail inválido').toLowerCase().trim(),
+    email: z.string().email(),
   }),
+  query: z.object({}).optional(),
+  params: z.object({}).optional(),
 })
 
 export const resetPasswordSchema = z.object({
   body: z.object({
-    token: z.string().min(1, 'Token é obrigatório'),
-    newPassword: z
+    token: z.string().min(1),
+    password: z
       .string()
-      .min(8, 'Senha deve ter no mínimo 8 caracteres')
-      .regex(/[A-Z]/, 'Senha deve conter pelo menos uma letra maiúscula')
-      .regex(/[0-9]/, 'Senha deve conter pelo menos um número'),
+      .min(8)
+      .regex(/[A-Z]/, 'Deve conter uma letra maiúscula')
+      .regex(/[0-9]/, 'Deve conter um número'),
   }),
+  query: z.object({}).optional(),
+  params: z.object({}).optional(),
 })
 
 export const updateProfileSchema = z.object({
   body: z.object({
-    name: z.string().min(2).max(100).trim().optional(),
-    phone: z
+    name: z.string().min(2).max(100).optional(),
+    phone: z.string().optional(),
+    cpf: z.string().optional(),
+    birthDate: z.string().optional(),
+    currentPassword: z.string().optional(),
+    newPassword: z
       .string()
-      .regex(/^\(?[1-9]{2}\)?\s?9?\d{4}-?\d{4}$/, 'Telefone inválido')
-      .optional()
-      .nullable(),
-    cpf: z
-      .string()
-      .regex(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/, 'CPF inválido')
-      .optional()
-      .nullable(),
-    birthDate: z
-      .string()
-      .datetime({ message: 'Data inválida' })
-      .optional()
-      .nullable(),
+      .min(8)
+      .regex(/[A-Z]/)
+      .regex(/[0-9]/)
+      .optional(),
   }),
+  query: z.object({}).optional(),
+  params: z.object({}).optional(),
 })
 
 export type RegisterInput = z.infer<typeof registerSchema>['body']

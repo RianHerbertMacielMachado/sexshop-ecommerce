@@ -67,3 +67,5 @@ export function httpLogger() {
     next()
   }
 }
+
+export default logger

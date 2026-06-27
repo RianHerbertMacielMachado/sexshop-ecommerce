@@ -1,30 +1,34 @@
-import { z } from 'zod'
+import { z } from 'zod' 
 
 export const createCategorySchema = z.object({
   body: z.object({
-    name: z.string().min(2).max(100).trim(),
-    description: z.string().max(500).optional().nullable(),
-    imageUrl: z.string().url().optional().nullable(),
-    parentId: z.string().cuid().optional().nullable(),
-    isActive: z.boolean().default(true),
-    order: z.number().int().min(0).default(0),
-    metaTitle: z.string().max(70).optional().nullable(),
-    metaDescription: z.string().max(160).optional().nullable(),
+    name: z.string().min(2).max(100),
+    description: z.string().optional(),
+    imageUrl: z.string().url().optional(),
+    parentId: z.string().cuid().optional(),
+    isActive: z.coerce.boolean().optional().default(true),
+    order: z.coerce.number().int().optional().default(0),
+    metaTitle: z.string().optional(),
+    metaDescription: z.string().optional(),
   }),
+  query: z.object({}).optional(),
+  params: z.object({}).optional(),
 })
 
 export const updateCategorySchema = z.object({
-  params: z.object({ id: z.string().cuid() }),
   body: z.object({
-    name: z.string().min(2).max(100).trim().optional(),
-    slug: z.string().min(2).max(100).optional(),
-    description: z.string().max(500).optional().nullable(),
-    imageUrl: z.string().url().optional().nullable(),
+    name: z.string().min(2).max(100).optional(),
+    description: z.string().optional(),
+    imageUrl: z.string().url().optional(),
     parentId: z.string().cuid().optional().nullable(),
-    isActive: z.boolean().optional(),
-    order: z.number().int().min(0).optional(),
-    metaTitle: z.string().max(70).optional().nullable(),
-    metaDescription: z.string().max(160).optional().nullable(),
+    isActive: z.coerce.boolean().optional(),
+    order: z.coerce.number().int().optional(),
+    metaTitle: z.string().optional(),
+    metaDescription: z.string().optional(),
+  }),
+  query: z.object({}).optional(),
+  params: z.object({
+    id: z.string().cuid(),
   }),
 })
 

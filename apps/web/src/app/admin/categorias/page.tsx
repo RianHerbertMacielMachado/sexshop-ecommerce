@@ -40,7 +40,14 @@ function CategoryRow({
             )}
             {category.imageUrl ? (
               <div className="h-8 w-8 rounded overflow-hidden shrink-0">
-                <Image src={category.imageUrl} alt={category.name} width={32} height={32} className="object-cover" />
+                <Image
+                    src={category.imageUrl || '/placeholder.svg'}
+                    alt={category.name}
+                    width={32}
+                    height={32}
+                    className="object-cover"
+                />
+
               </div>
             ) : (
               <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">

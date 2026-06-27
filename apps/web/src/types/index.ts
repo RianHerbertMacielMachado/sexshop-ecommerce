@@ -1,42 +1,128 @@
+// ── Enums ──────────────────────────────────────────────
+
+export type UserRole = 'CUSTOMER' | 'ADMIN'
+
+export type OrderStatus =
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'PROCESSING'
+  | 'SHIPPED'
+  | 'DELIVERED'
+  | 'CANCELLED'
+  | 'REFUNDED'
+
+export type PaymentStatus =
+  | 'PENDING'
+  | 'PAID'
+  | 'FAILED'
+  | 'REFUNDED'
+  | 'CANCELLED'
+
+export type CouponType = 'PERCENTAGE' | 'FIXED' | 'FREE_SHIPPING'
+
+export type PaymentMethodType = 'STRIPE' | 'PIX' | 'BOLETO'
+
+export type BannerPosition =
+  | 'HOME_HERO'
+  | 'HOME_MIDDLE'
+  | 'HOME_BOTTOM'
+  | 'CATEGORY_TOP'
+  | 'SIDEBAR'
+
+// ── User ───────────────────────────────────────────────
+
 export interface User {
   id: string
   name: string
   email: string
-  role: 'ADMIN' | 'CUSTOMER'
+  phone?: string | null
+  cpf?: string | null
+  birthDate?: string | null
+  role: UserRole
   isActive: boolean
   emailVerified: boolean
-  phone: string | null
-  cpf: string | null
-  birthDate: string | null
   loyaltyPoints: number
   createdAt: string
+  updatedAt: string
+}
+
+// ── Address ────────────────────────────────────────────
+
+export interface Address {
+  id: string
+  userId: string
+  label?: string | null
+  recipientName?: string | null
+  street: string
+  number: string
+  complement?: string | null
+  neighborhood: string
+  city: string
+  state: string
+  zipCode: string
+  isDefault: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+// ── Category ───────────────────────────────────────────
+
+export interface Category {
+  id: string
+  name: string
+  slug: string
+  description?: string | null
+  imageUrl?: string | null
+  parentId?: string | null
+  isActive: boolean
+  order: number
+  metaTitle?: string | null
+  metaDescription?: string | null
+  createdAt: string
+  updatedAt: string
+  children?: Category[]
+  _count?: {
+    products: number
+    children: number
+  }
+}
+
+// ── Product ────────────────────────────────────────────
+
+export interface ProductVariant {
+  id: string
+  productId: string
+  name: string
+  value: string
+  price?: number | null
+  stock: number
+  sku?: string | null
+  isActive: boolean
 }
 
 export interface Product {
   id: string
   name: string
   slug: string
-  description: string
-  shortDescription: string | null
+  description?: string | null
   price: number
-  comparePrice: number | null
-  costPrice: number | null
+  compareAtPrice?: number | null
   sku: string
   stock: number
-  weight: number | null
+  weight?: number | null
   images: string[]
   categoryId: string
-  category: CategorySummary
+  category?: Category | null
   isActive: boolean
   isFeatured: boolean
   isDiscreet: boolean
-  metaTitle: string | null
-  metaDescription: string | null
   tags: string[]
-  soldCount: number
-  averageRating: number
-  reviewCount: number
-  variants: ProductVariant[]
+  metaTitle?: string | null
+  metaDescription?: string | null
+  variants?: ProductVariant[]
+  reviews?: Review[]
+  averageRating?: number
+  reviewCount?: number
   createdAt: string
   updatedAt: string
 }
@@ -45,203 +131,161 @@ export interface ProductSummary {
   id: string
   name: string
   slug: string
-  shortDescription: string | null
   price: number
-  comparePrice: number | null
+  compareAtPrice?: number | null
   images: string[]
-  stock: number
-  isFeatured: boolean
+  category?: { name: string } | null
   isDiscreet: boolean
-  soldCount: number
-  averageRating: number
-  reviewCount: number
-  isActive: boolean
-  createdAt: string
-  category: CategorySummary
-}
-
-export interface ProductVariant {
-  id: string
-  productId: string
-  name: string
-  options: Record<string, string>
-  price: number | null
+  isFeatured: boolean
   stock: number
-  sku: string | null
-  imageUrl: string | null
-  isActive: boolean
+  averageRating?: number
+  reviewCount?: number
 }
 
-export interface Category {
-  id: string
-  name: string
-  slug: string
-  description: string | null
-  imageUrl: string | null
-  isActive: boolean
-  parentId: string | null
-  order: number
-  metaTitle: string | null
-  metaDescription: string | null
-  parent: CategorySummary | null
-  children: CategorySummary[]
-  _count: { products: number }
-  createdAt: string
-  updatedAt: string
-}
-
-export interface CategorySummary {
-  id: string
-  name: string
-  slug: string
-  imageUrl?: string | null
-  _count?: { products: number }
-}
+// ── Cart ───────────────────────────────────────────────
 
 export interface CartItem {
-  productId: string
-  variantId?: string | null
-  quantity: number
+  id: string
   name: string
   slug: string
   price: number
-  originalPrice: number
-  image?: string | null
-  variantName?: string | null
+  image?: string
+  quantity: number
   stock: number
-  isDiscreet: boolean
-  sku: string
+  variantId?: string
+  variantName?: string
+  isDiscreet?: boolean
+}
+
+// ── Order ──────────────────────────────────────────────
+
+export interface ShippingAddress {
+  id: string
+  recipientName: string
+  street: string
+  number: string
+  complement?: string | null
+  neighborhood: string
+  city: string
+  state: string
+  zipCode: string
+}
+
+export interface OrderItem {
+  id: string
+  productId: string
+  productName: string
+  variantName?: string | null
+  quantity: number
+  price: number
+  product?: {
+    images: string[]
+  } | null
+}
+
+export interface OrderStatusHistory {
+  id: string
+  status: OrderStatus
+  comment?: string | null
+  createdAt: string
 }
 
 export interface Order {
   id: string
   orderNumber: string
-  userId: string | null
-  guestEmail: string | null
-  guestName: string | null
+  userId?: string | null
+  user?: Pick<User, 'id' | 'name' | 'email'> | null
+  guestName?: string | null
+  guestEmail?: string | null
   status: OrderStatus
   paymentStatus: PaymentStatus
-  paymentMethod: string
   subtotal: number
-  discount: number
+  discountAmount: number
   shippingCost: number
   total: number
-  couponCode: string | null
-  notes: string | null
-  trackingCode: string | null
+  couponCode?: string | null
+  trackingCode?: string | null
   isDiscreetPackaging: boolean
-  estimatedDelivery: string | null
-  paidAt: string | null
-  shippedAt: string | null
-  deliveredAt: string | null
-  cancelledAt: string | null
+  notes?: string | null
+  items?: OrderItem[]
+  shippingAddress?: ShippingAddress | null
+  statusHistory?: OrderStatusHistory[]
   createdAt: string
   updatedAt: string
-  items: OrderItem[]
-  shippingAddress: ShippingAddress | null
-  statusHistory: OrderStatusHistory[]
-  user: { id: string; name: string; email: string } | null
 }
 
-export interface OrderItem {
-  id: string
-  orderId: string
-  productId: string | null
-  variantId: string | null
-  quantity: number
-  price: number
-  productName: string
-  productImage: string | null
-  variantName: string | null
-  product?: ProductSummary | null
-}
+// ── Coupon ─────────────────────────────────────────────
 
-export interface ShippingAddress {
+export interface Coupon {
   id: string
-  orderId: string
-  recipientName: string
-  street: string
-  number: string
-  complement: string | null
-  neighborhood: string
-  city: string
-  state: string
-  zipCode: string
-  phone: string | null
-}
-
-export interface OrderStatusHistory {
-  id: string
-  orderId: string
-  status: string
-  comment: string | null
+  code: string
+  type: CouponType
+  value: number
+  minOrderAmount?: number | null
+  maxUses?: number | null
+  usedCount: number
+  expiresAt?: string | null
+  isActive: boolean
   createdAt: string
+  updatedAt: string
 }
 
-export type OrderStatus =
-  | 'PENDING'
-  | 'PAID'
-  | 'PROCESSING'
-  | 'SHIPPED'
-  | 'DELIVERED'
-  | 'CANCELLED'
-  | 'REFUNDED'
+// ── Payment ────────────────────────────────────────────
 
-export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED'
+export interface PaymentMethod {
+  id: string
+  name: string
+  type: PaymentMethodType
+  isActive: boolean
+  config?: Record<string, unknown>
+}
+
+// ── Review ─────────────────────────────────────────────
 
 export interface Review {
   id: string
   productId: string
-  userId: string | null
-  guestName: string | null
+  userId: string
   rating: number
-  comment: string | null
+  title?: string | null
+  comment?: string | null
   isApproved: boolean
-  adminReply: string | null
+  adminReply?: string | null
+  user?: Pick<User, 'id' | 'name'> | null
+  product?: Pick<Product, 'id' | 'name' | 'slug'> | null
   createdAt: string
-  user: { id: string; name: string } | null
-  product?: { id: string; name: string; slug: string }
+  updatedAt: string
 }
+
+// ── Banner ─────────────────────────────────────────────
 
 export interface Banner {
   id: string
-  title: string
-  subtitle: string | null
-  imageUrl: string
-  mobileImageUrl: string | null
-  link: string | null
+  title?: string | null
+  subtitle?: string | null
+  imageUrl?: string | null
+  mobileImageUrl?: string | null
+  linkUrl?: string | null
+  linkText?: string | null
   position: BannerPosition
   isActive: boolean
   order: number
-  startDate: string | null
-  endDate: string | null
+  startsAt?: string | null
+  endsAt?: string | null
   createdAt: string
+  updatedAt: string
 }
 
-export type BannerPosition = 'HOME_HERO' | 'HOME_MIDDLE' | 'HOME_BOTTOM' | 'SIDEBAR'
+// ── Shipping ───────────────────────────────────────────
 
-export interface SiteSettings {
+export interface ShippingZone {
   id: string
-  storeName: string
-  storeDescription: string | null
-  storeEmail: string | null
-  storePhone: string | null
-  storeWhatsapp: string | null
-  storeCNPJ: string | null
-  logoUrl: string | null
-  faviconUrl: string | null
-  primaryColor: string
-  secondaryColor: string
-  socialLinks: Record<string, string>
-  seoTitle: string | null
-  seoDescription: string | null
-  seoKeywords: string | null
-  maintenanceMode: boolean
-  maintenanceMessage: string | null
-  freeShippingThreshold: number | null
-  footerText: string | null
-  privacyPolicy?: boolean | string | null
-  termsOfService?: boolean | string | null
+  name: string
+  states: string[]
+  price: number
+  deliveryDays: number
+  freeShippingThreshold?: number | null
+  isActive: boolean
   createdAt: string
   updatedAt: string
 }
@@ -250,89 +294,63 @@ export interface ShippingOption {
   zoneId: string
   name: string
   price: number
-  originalPrice: number
-  estimatedDays: string
+  deliveryDays: number
   isFree: boolean
 }
 
-export interface Coupon {
+// ── Site Settings ──────────────────────────────────────
+
+export interface SiteSettings {
   id: string
-  code: string
-  type: 'PERCENTAGE' | 'FIXED'
-  value: number
-  minOrderValue: number | null
-  maxDiscountValue: number | null
-  maxUses: number | null
-  usedCount: number
-  expiresAt: string | null
-  isActive: boolean
-  createdAt: string
+  storeName: string
+  storeDescription?: string | null
+  storeEmail: string
+  storePhone?: string | null
+  storeCnpj?: string | null
+  logoUrl?: string | null
+  faviconUrl?: string | null
+  freeShippingThreshold?: number | null
+  maintenanceMode: boolean
+  allowGuestCheckout: boolean
+  metaTitle?: string | null
+  metaDescription?: string | null
+  primaryColor?: string | null
+  updatedAt: string
 }
 
-export interface PaginatedResponse<T> {
-  items?: T[]
-  products?: T[]
-  orders?: T[]
-  customers?: T[]
-  reviews?: T[]
-  total: number
-  page: number
-  limit: number
-  totalPages: number
+// ── Dashboard ──────────────────────────────────────────
+
+export interface DashboardData {
+  revenue30d: number
+  ordersCount30d: number
+  pendingOrders: number
+  totalCustomers: number
+  newCustomers30d: number
+  activeProducts: number
+  lowStockProducts: number
+  revenueChart: { date: string; revenue: number }[]
+  ordersByStatus: { status: string; count: number }[]
+  topProducts: {
+    id: string
+    name: string
+    totalSold: number
+    revenue: number
+  }[]
 }
+
+// ── API Response ───────────────────────────────────────
 
 export interface ApiResponse<T = unknown> {
   success: boolean
   message: string
   data?: T
-  errors?: unknown
+  errors?: Record<string, string[]>
 }
 
-export interface DashboardData {
-  revenue: {
-    today: number
-    week: number
-    month: number
-    year: number
-    todayOrders: number
-    monthOrders: number
-  }
-  orders: {
-    byStatus: Record<string, number>
-    total: number
-  }
-  customers: {
-    total: number
-    newThisMonth: number
-  }
-  products: {
-    total: number
-    lowStock: Array<{ id: string; name: string; sku: string; stock: number; images: string[] }>
-    topSelling: Array<{ id: string; name: string; slug: string; soldCount: number; images: string[]; price: number }>
-  }
-  recentOrders: Order[]
-  revenueChart: Array<{ date: string; revenue: number; orders: number }>
-}
-
-export interface WishlistItem {
-  id: string
-  userId: string
-  productId: string
-  createdAt: string
-  product: ProductSummary
-}
-
-export interface Address {
-  id: string
-  userId: string
-  name: string
-  street: string
-  number: string
-  complement: string | null
-  neighborhood: string
-  city: string
-  state: string
-  zipCode: string
-  isDefault: boolean
-  createdAt: string
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  pages: number
+  limit: number
 }
