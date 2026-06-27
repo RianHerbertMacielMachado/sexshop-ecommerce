@@ -11,9 +11,14 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user, _hasHydrated } = useAuthStore()
 
   useEffect(() => {
+    // Só redireciona DEPOIS que o Zustand terminou de ler o localStorage.
+    // Sem esse guard, o F5 lê isAuthenticated=false (valor inicial)
+    // e redireciona antes de a rehidratação restaurar o token salvo.
+    if (!_hasHydrated) return
+
     if (!isAuthenticated) {
       router.replace('/entrar?redirect=/admin')
       return
@@ -21,9 +26,11 @@ export default function AdminLayout({
     if (user?.role !== 'ADMIN') {
       router.replace('/')
     }
-  }, [isAuthenticated, user, router])
+  }, [_hasHydrated, isAuthenticated, user, router])
 
-  if (!isAuthenticated || user?.role !== 'ADMIN') {
+  // Enquanto o store não rehidratou, mostra spinner (milissegundos).
+  // Depois da rehidratação, só mostra spinner se de facto não tiver acesso.
+  if (!_hasHydrated || !isAuthenticated || user?.role !== 'ADMIN') {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />

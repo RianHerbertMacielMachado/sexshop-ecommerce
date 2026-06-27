@@ -8,6 +8,8 @@ interface AuthStore {
   accessToken: string | null
   isLoading: boolean
   isAuthenticated: boolean
+  /** true assim que o Zustand termina de ler o localStorage (rehidratação) */
+  _hasHydrated: boolean
 
   login: (email: string, password: string) => Promise<boolean>
   register: (name: string, email: string, password: string, phone?: string) => Promise<boolean>
@@ -16,6 +18,7 @@ interface AuthStore {
   setUser: (user: User) => void
   setToken: (token: string) => void
   clearAuth: () => void
+  setHasHydrated: (value: boolean) => void
 }
 
 export const useAuthStore = create<AuthStore>()(
@@ -25,6 +28,9 @@ export const useAuthStore = create<AuthStore>()(
       accessToken: null,
       isLoading: false,
       isAuthenticated: false,
+      _hasHydrated: false,
+
+      setHasHydrated: (value) => set({ _hasHydrated: value }),
 
       login: async (email, password) => {
         set({ isLoading: true })
@@ -94,7 +100,13 @@ export const useAuthStore = create<AuthStore>()(
         user: state.user,
         accessToken: state.accessToken,
         isAuthenticated: state.isAuthenticated,
+        // _hasHydrated NÃO é persistido — começa false em todo reload
       }),
+      onRehydrateStorage: () => (state) => {
+        // Chamado pelo Zustand assim que o localStorage é lido.
+        // A partir daqui isAuthenticated/user já têm os valores corretos.
+        state?.setHasHydrated(true)
+      },
     }
   )
 )

@@ -30,15 +30,16 @@ export default function AccountLayout({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const { isAuthenticated, user, logout } = useAuthStore()
+  const { isAuthenticated, user, logout, _hasHydrated } = useAuthStore()
 
   useEffect(() => {
+    if (!_hasHydrated) return
     if (!isAuthenticated) {
       router.replace(`/entrar?redirect=${pathname}`)
     }
-  }, [isAuthenticated, router, pathname])
+  }, [_hasHydrated, isAuthenticated, router, pathname])
 
-  if (!isAuthenticated) return null
+  if (!_hasHydrated || !isAuthenticated) return null
 
   const handleLogout = async () => {
     await logout()
