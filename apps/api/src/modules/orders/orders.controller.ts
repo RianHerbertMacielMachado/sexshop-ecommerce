@@ -23,7 +23,8 @@ export const getOrderById = asyncHandler(async (req: Request, res: Response) => 
 
 export const trackOrder = asyncHandler(async (req: Request, res: Response) => {
   const { orderNumber } = req.params
-  const { email } = req.body as { email: string }
+  // Aceita email tanto via query param (?email=) quanto via body (retrocompatível)
+  const email = (req.query.email as string) || (req.body as { email?: string })?.email
   if (!email) {
     res.status(400).json({ success: false, message: 'E-mail é obrigatório para rastrear pedido' })
     return
