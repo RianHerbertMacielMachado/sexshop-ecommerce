@@ -25,7 +25,7 @@ export const createOrderSchema = z.object({
     shippingAddress: addressSchema,
     shippingZoneId: z.string().cuid(),
     couponCode: z.string().optional(),
-    paymentMethod: z.enum(['STRIPE', 'PIX', 'BOLETO']),
+    paymentMethod: z.enum(['STRIPE_CARD', 'PIX', 'BOLETO', 'MANUAL', 'STRIPE']),
     isDiscreetPackaging: z.boolean().optional().default(false),
     notes: z.string().optional(),
     guestName: z.string().optional(),

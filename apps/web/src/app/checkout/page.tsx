@@ -61,7 +61,12 @@ export default function CheckoutPage() {
   const { mutate: createOrder, isPending } = useMutation({
     mutationFn: async (data: CheckoutFormData) => {
       const payload = {
-        items: items.map((i) => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity })),
+        items: items.map((i) => ({
+          productId: i.productId,
+          // omite variantId se undefined para não quebrar a validação Zod de cuid
+          ...(i.variantId ? { variantId: i.variantId } : {}),
+          quantity: i.quantity,
+        })),
         shippingAddress: data.address,
         couponCode: couponCode ?? undefined,
         shippingZoneId: data.shippingZoneId,
@@ -74,14 +79,22 @@ export default function CheckoutPage() {
       return res.data.data.order as { id: string; orderNumber: string }
     },
     onSuccess: async (order) => {
-      if (formData.paymentMethod === 'PIX') {
+      const method = formData.paymentMethod ?? ''
+
+      if (method === 'PIX') {
+        // Fluxo PIX: gera QR Code e redireciona
         await api.post('/payments/checkout/pix', { orderId: order.id })
         router.push(`/checkout/pix?orderId=${order.id}`)
-      } else {
+      } else if (method === 'STRIPE_CARD' || method === 'STRIPE') {
+        // Fluxo Stripe: redireciona para Stripe Checkout
         const stripeRes = await api.post('/payments/checkout/stripe', { orderId: order.id })
         const { checkoutUrl } = stripeRes.data.data
         clearCart()
         window.location.href = checkoutUrl
+      } else {
+        // Fluxo manual (BOLETO, MANUAL, etc.): pedido criado, aguarda pagamento
+        clearCart()
+        router.push(`/checkout/success?orderId=${order.id}&manual=true`)
       }
     },
   })
