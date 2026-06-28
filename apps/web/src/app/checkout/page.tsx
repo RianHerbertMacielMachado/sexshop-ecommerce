@@ -14,7 +14,8 @@ import { formatCurrency } from '@/lib/utils'
 import CheckoutIdentification from '@/components/checkout/CheckoutIdentification'
 import CheckoutAddress from '@/components/checkout/CheckoutAddress'
 import CheckoutPayment from '@/components/checkout/CheckoutPayment'
-
+import { toast } from 'react-hot-toast'
+import type { AxiosError } from 'axios'
 import type { ShippingOption } from '@/types'
 
 export type CheckoutFormData = {
@@ -96,6 +97,14 @@ export default function CheckoutPage() {
         clearCart()
         router.push(`/checkout/success?orderId=${order.id}&manual=true`)
       }
+    },
+    onError: (err) => {
+      const axiosErr = err as AxiosError<{ message?: string; errors?: { message: string }[] }>
+      const apiMsg =
+        axiosErr.response?.data?.errors?.[0]?.message ??
+        axiosErr.response?.data?.message ??
+        'Erro ao processar pedido. Tente novamente.'
+      toast.error(apiMsg, { duration: 6000 })
     },
   })
 

@@ -10,12 +10,14 @@ export class OrdersService {
   async create(input: CreateOrderInput, userId?: string) {
     // Valida itens e estoque
     const productIds = input.items.map((i) => i.productId)
+    // Usa Set para deduplicar — o mesmo produto pode aparecer com variantes diferentes
+    const uniqueProductIds = [...new Set(productIds)]
     const products = await prisma.product.findMany({
-      where: { id: { in: productIds }, isActive: true },
+      where: { id: { in: uniqueProductIds }, isActive: true },
       include: { variants: true },
     })
 
-    if (products.length !== input.items.length) {
+    if (products.length !== uniqueProductIds.length) {
       throw new AppError('Um ou mais produtos não foram encontrados ou estão inativos', 400)
     }
 
